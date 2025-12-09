@@ -157,3 +157,140 @@
                         <option value="飛機">✈️ 飛機</option>
                     </select>
                 </div>
+                <div class="col">
+                    <label>⏱️ 時間(分)</label>
+                    <input type="number" id="duration" placeholder="分鐘">
+                </div>
+            </div>
+
+            <button class="add-btn" id="addBtn" style="margin-top: 20px;">＋ 新增行程</button>
+        </div>
+
+        <ul id="tripList" class="trip-list">
+            </ul>
+        <p id="emptyMsg" class="empty-msg">正在讀取行程...</p>
+    </div>
+
+    <script type="module">
+        // 匯入 Firebase SDK (使用網頁版 CDN)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, serverTimestamp } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 您的 Firebase 設定 (已經幫您填好)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBYUTADnEjSDMd__T7n8xsoY5LFUn9qlDw",
+            authDomain: "gogo-252ba.firebaseapp.com",
+            projectId: "gogo-252ba",
+            storageBucket: "gogo-252ba.firebasestorage.app",
+            messagingSenderId: "599210924514",
+            appId: "1:599210924514:web:15e78eb22c2b355e9b81bb",
+            measurementId: "G-3VJRC7WZQB"
+        };
+
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const tripCollection = collection(db, "trips"); // 建立一個叫 "trips" 的資料集合
+
+        console.log("Firebase initialized");
+        document.getElementById('status').innerText = "✅ 已連線到雲端資料庫";
+
+        // 監聽資料庫變化 (這是即時同步的關鍵！)
+        // orderBy("createdAt") 讓行程依照建立時間排列
+        const q = query(tripCollection, orderBy("createdAt", "asc"));
+        
+        onSnapshot(q, (snapshot) => {
+            const list = document.getElementById('tripList');
+            const msg = document.getElementById('emptyMsg');
+            list.innerHTML = ""; // 先清空畫面
+
+            if (snapshot.empty) {
+                msg.style.display = "block";
+                msg.innerText = "目前沒有行程，快來新增吧！";
+            } else {
+                msg.style.display = "none";
+                snapshot.forEach((doc) => {
+                    const trip = doc.data();
+                    const li = document.createElement('li');
+                    li.className = 'trip-item';
+                    li.innerHTML = `
+                        <div class="locations">
+                            <span class="spot">${trip.start}</span>
+                            <span class="arrow">➝</span>
+                            <span class="spot">${trip.end}</span>
+                        </div>
+                        <div class="details">
+                            <div style="display:flex; gap:10px;">
+                                <span class="tag">${trip.transport}</span>
+                                <span class="tag">⏱️ ${trip.duration} 分鐘</span>
+                            </div>
+                            <button class="delete-btn" id="del-${doc.id}">刪除</button>
+                        </div>
+                    `;
+                    list.appendChild(li);
+
+                    // 綁定刪除按鈕事件
+                    document.getElementById(`del-${doc.id}`).addEventListener('click', () => {
+                        deleteTrip(doc.id);
+                    });
+                });
+            }
+        });
+
+        // 新增行程功能
+        async function addTrip() {
+            const btn = document.getElementById('addBtn');
+            const start = document.getElementById('startPoint').value;
+            const end = document.getElementById('endPoint').value;
+            const transport = document.getElementById('transport').value;
+            const duration = document.getElementById('duration').value;
+
+            if(start === '' || end === '') {
+                alert('請填寫起點和終點喔！');
+                return;
+            }
+
+            btn.disabled = true; // 防止重複點擊
+            btn.innerText = "處理中...";
+
+            try {
+                await addDoc(tripCollection, {
+                    start: start,
+                    end: end,
+                    transport: transport,
+                    duration: duration,
+                    createdAt: serverTimestamp() // 加上時間戳記以便排序
+                });
+                
+                // 清空輸入框
+                document.getElementById('startPoint').value = '';
+                document.getElementById('endPoint').value = '';
+                document.getElementById('duration').value = '';
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("新增失敗，請檢查網路或資料庫設定");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "＋ 新增行程";
+            }
+        }
+
+        // 刪除行程功能
+        async function deleteTrip(id) {
+            if(confirm('確定要刪除這筆行程嗎？')) {
+                try {
+                    await deleteDoc(doc(db, "trips", id));
+                } catch (e) {
+                    console.error("Error deleting: ", e);
+                    alert("刪除失敗");
+                }
+            }
+        }
+
+        // 綁定按鈕事件 (因為 module 模式下不能直接在 HTML 寫 onclick)
+        document.getElementById('addBtn').addEventListener('click', addTrip);
+
+    </script>
+</body>
+</html>
