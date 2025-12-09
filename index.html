@@ -463,10 +463,13 @@
             listenItems();
         }
 
+// 5. 監聽與顯示 (V6.1 防呆增強版：解決資料不完整導致列表空白的問題)
         function listenItems() {
             if(unsubscribe) unsubscribe();
-            // 這裡確保 day 是數字
-            const q = query(collection(db, "items"), where("tripId", "==", currentTripId), where("day", "==", currentDayIndex));
+            
+            // 確保 day 是數字，避免資料庫比對錯誤
+            const targetDay = parseInt(currentDayIndex);
+            const q = query(collection(db, "items"), where("tripId", "==", currentTripId), where("day", "==", targetDay));
             
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const div = document.getElementById('itinerary-list');
@@ -474,37 +477,52 @@
                 currentDayItemsData = []; 
 
                 snapshot.forEach(doc => currentDayItemsData.push({ id: doc.id, ...doc.data() }));
-                currentDayItemsData.sort((a, b) => (a.time || "00:00").localeCompare(b.time || "00:00"));
+                
+                // 排序 (防止沒有時間的資料導致排序錯誤)
+                currentDayItemsData.sort((a, b) => {
+                    const timeA = a.time || "23:59"; // 沒時間的排最後
+                    const timeB = b.time || "23:59";
+                    return timeA.localeCompare(timeB);
+                });
 
                 if(currentDayItemsData.length === 0) {
-                     div.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:50px;"><i class="fas fa-route" style="font-size:48px; opacity:0.3;"></i><p>點擊右下角 + 開始規劃</p></div>';
+                     div.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:50px;"><i class="fas fa-route" style="font-size:48px; opacity:0.3;"></i><p>目前沒有行程<br>點擊右下角 + 開始規劃</p></div>';
                 }
 
                 currentDayItemsData.forEach(item => {
+                    // === 防呆計算區：就算資料缺東缺西，也不能讓網頁掛掉 ===
                     let endTimeStr = "";
+                    let timeDisplay = item.time || "未設定"; // 如果沒時間，顯示未設定
+
+                    // 只有當「時間」和「停留分鐘」都有值的時候，才去計算結束時間
                     if(item.time && item.duration) {
-                        const [h, m] = item.time.split(':').map(Number);
-                        const totalMin = h * 60 + m + parseInt(item.duration);
-                        const endH = Math.floor(totalMin / 60) % 24;
-                        const endM = totalMin % 60;
-                        endTimeStr = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+                        try {
+                            const [h, m] = item.time.split(':').map(Number);
+                            const totalMin = h * 60 + m + parseInt(item.duration);
+                            const endH = Math.floor(totalMin / 60) % 24;
+                            const endM = totalMin % 60;
+                            endTimeStr = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+                        } catch(err) {
+                            console.warn("時間計算錯誤，跳過此筆:", err);
+                        }
                     }
 
+                    // 產生 HTML
                     div.innerHTML += `
                         <div class="spot-card">
                             <div class="time-col">
-                                <div style="font-weight:bold; font-size:1.1em;">${item.time}</div>
+                                <div style="font-weight:bold; font-size:1.1em;">${timeDisplay}</div>
                                 <div style="font-size:0.8em; opacity:0.7;">↓</div>
-                                <div style="font-size:0.9em;">${endTimeStr}</div>
+                                <div style="font-size:0.9em;">${endTimeStr || "--:--"}</div>
                             </div>
                             <div class="info-col">
                                 <div class="card-actions">
                                     <button class="icon-btn" onclick="openModal('${item.id}')"><i class="fas fa-pen"></i></button>
                                     <button class="icon-btn btn-del" onclick="delItem('${item.id}')"><i class="fas fa-trash-alt"></i></button>
                                 </div>
-                                <div class="spot-title">${item.location}</div>
+                                <div class="spot-title">${item.location || "未命名地點"}</div>
                                 <div class="spot-meta">
-                                    ${item.transport !== '無' ? `<span class="badge"><i class="fas fa-bus"></i> ${item.transport}</span>` : ''}
+                                    ${item.transport && item.transport !== '無' ? `<span class="badge"><i class="fas fa-bus"></i> ${item.transport}</span>` : ''}
                                     ${item.duration ? `<span class="badge"><i class="far fa-clock"></i> ${item.duration}分</span>` : ''}
                                     ${item.note ? `<span><i class="far fa-comment-dots"></i> ${item.note}</span>` : ''}
                                 </div>
