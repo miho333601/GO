@@ -264,18 +264,34 @@
             listenItems();
         }
 
-        // 5. 監聽與顯示 (含時間計算邏輯)
+// 5. 監聽與顯示 (V3.2 修正版：改為前端排序，解決資料庫索引問題)
         function listenItems() {
             if(unsubscribe) unsubscribe();
-            const q = query(collection(db, "items"), where("tripId", "==", currentTripId), where("day", "==", currentDayIndex), orderBy("time"));
+            
+            // 修正點：拿掉 orderBy("time")，只做篩選
+            const q = query(collection(db, "items"), where("tripId", "==", currentTripId), where("day", "==", currentDayIndex));
             
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const div = document.getElementById('itinerary-list');
                 div.innerHTML = '';
                 
+                // 1. 先把資料全部轉成陣列
+                let itemsArray = [];
                 snapshot.forEach(doc => {
-                    const item = doc.data();
-                    
+                    itemsArray.push({ id: doc.id, ...doc.data() });
+                });
+
+                // 2. 用 JavaScript 在這裡排序 (依照時間 time)
+                itemsArray.sort((a, b) => {
+                    return a.time.localeCompare(b.time);
+                });
+
+                // 3. 顯示出來
+                if(itemsArray.length === 0) {
+                     div.innerHTML = '<p style="text-align:center; color:#999; margin-top:30px;">目前沒有行程，請按右下角新增</p>';
+                }
+
+                itemsArray.forEach(item => {
                     // 自動計算結束時間
                     let endTimeStr = "";
                     if(item.time && item.duration) {
@@ -300,7 +316,7 @@
                                 </div>
                                 <div style="color:#666; font-size:0.9em; margin-top:5px;">${item.note || ''}</div>
                             </div>
-                            <i class="fas fa-trash-alt" style="color:#ddd; cursor:pointer;" onclick="delItem('${doc.id}')"></i>
+                            <i class="fas fa-trash-alt" style="color:#ddd; cursor:pointer;" onclick="delItem('${item.id}')"></i>
                         </div>
                     `;
                 });
