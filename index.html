@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的旅遊規劃筆記 ✈️</title>
+    <title>雲端旅遊規劃筆記 ☁️</title>
     <style>
         :root {
             --primary-color: #007bff;
@@ -43,7 +43,7 @@
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            box-sizing: border-box; /* 確保 padding 不會撐爆寬度 */
+            box-sizing: border-box;
         }
 
         .row { display: flex; gap: 10px; }
@@ -61,6 +61,7 @@
             transition: 0.2s;
         }
         button.add-btn:hover { background-color: #0056b3; }
+        button.add-btn:disabled { background-color: #ccc; cursor: not-allowed; }
 
         /* 行程列表樣式 */
         .trip-list { list-style: none; padding: 0; }
@@ -72,6 +73,12 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             overflow: hidden;
             position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .locations {
@@ -111,144 +118,42 @@
         .delete-btn:hover { text-decoration: underline; }
 
         .empty-msg { text-align: center; color: #aaa; margin-top: 30px; }
+        
+        .status-bar {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>✈️ 旅遊行程規劃</h1>
+        <h1>✈️ 雲端旅遊規劃</h1>
+        <div class="status-bar" id="status">正在連線到資料庫...</div>
         
         <div class="input-card">
             <div class="row">
                 <div class="col">
-                    <label>📍 起點 (出發地)</label>
-                    <input type="text" id="startPoint" placeholder="例如：台北車站">
+                    <label>📍 起點</label>
+                    <input type="text" id="startPoint" placeholder="出發地">
                 </div>
                 <div class="col">
-                    <label>🏁 終點 (目的地)</label>
-                    <input type="text" id="endPoint" placeholder="例如：日月潭">
+                    <label>🏁 終點</label>
+                    <input type="text" id="endPoint" placeholder="目的地">
                 </div>
             </div>
 
             <div class="row" style="margin-top: 15px;">
                 <div class="col">
-                    <label>🚗 交通工具</label>
+                    <label>🚗 交通</label>
                     <select id="transport">
                         <option value="開車">🚗 開車</option>
                         <option value="火車">🚆 火車</option>
                         <option value="高鐵">🚄 高鐵</option>
                         <option value="公車">🚌 公車</option>
                         <option value="步行">🚶 步行</option>
+                        <option value="飛機">✈️ 飛機</option>
                     </select>
                 </div>
-                <div class="col">
-                    <label>⏱️ 預估時間 (分鐘)</label>
-                    <input type="number" id="duration" placeholder="例如：90">
-                </div>
-            </div>
-
-            <button class="add-btn" style="margin-top: 20px;" onclick="addTrip()">＋ 新增行程</button>
-        </div>
-
-        <ul id="tripList" class="trip-list">
-            </ul>
-        <p id="emptyMsg" class="empty-msg">目前沒有行程，快來新增吧！</p>
-        <button onclick="clearAll()" style="color:#999; background:none; border:none; width:100%; cursor:pointer;">清空所有記錄</button>
-    </div>
-
-    <script>
-        // 1. 網頁載入時，讀取舊資料
-        document.addEventListener('DOMContentLoaded', loadTrips);
-
-        function addTrip() {
-            // 抓取輸入框的值
-            let start = document.getElementById('startPoint').value;
-            let end = document.getElementById('endPoint').value;
-            let transport = document.getElementById('transport').value;
-            let duration = document.getElementById('duration').value;
-
-            // 簡單檢查有沒有填寫
-            if(start === '' || end === '') {
-                alert('請填寫起點和終點喔！');
-                return;
-            }
-
-            // 建立一個物件來存資料
-            let trip = {
-                id: Date.now(), // 用時間當作唯一編號
-                start: start,
-                end: end,
-                transport: transport,
-                duration: duration
-            };
-
-            // 存入 LocalStorage
-            let trips = JSON.parse(localStorage.getItem('myTrips')) || [];
-            trips.push(trip);
-            localStorage.setItem('myTrips', JSON.stringify(trips));
-
-            // 清空輸入框並重新顯示
-            document.getElementById('startPoint').value = '';
-            document.getElementById('endPoint').value = '';
-            document.getElementById('duration').value = '';
-            renderTrips();
-        }
-
-        function renderTrips() {
-            let trips = JSON.parse(localStorage.getItem('myTrips')) || [];
-            let list = document.getElementById('tripList');
-            let msg = document.getElementById('emptyMsg');
-
-            list.innerHTML = ''; // 清空目前的列表顯示
-
-            if(trips.length === 0) {
-                msg.style.display = 'block';
-            } else {
-                msg.style.display = 'none';
-                
-                // 跑迴圈把每個行程畫出來
-                trips.forEach(trip => {
-                    let li = document.createElement('li');
-                    li.className = 'trip-item';
-                    li.innerHTML = `
-                        <div class="locations">
-                            <span class="spot">${trip.start}</span>
-                            <span class="arrow">➝</span>
-                            <span class="spot">${trip.end}</span>
-                        </div>
-                        <div class="details">
-                            <div style="display:flex; gap:10px;">
-                                <span class="tag">${trip.transport}</span>
-                                <span class="tag">⏱️ ${trip.duration} 分鐘</span>
-                            </div>
-                            <button class="delete-btn" onclick="deleteTrip(${trip.id})">刪除</button>
-                        </div>
-                    `;
-                    list.appendChild(li);
-                });
-            }
-        }
-
-        function deleteTrip(id) {
-            if(confirm('確定要刪除這筆行程嗎？')) {
-                let trips = JSON.parse(localStorage.getItem('myTrips')) || [];
-                // 過濾掉要刪除的那筆 ID
-                trips = trips.filter(t => t.id !== id);
-                localStorage.setItem('myTrips', JSON.stringify(trips));
-                renderTrips();
-            }
-        }
-
-        function loadTrips() {
-            renderTrips();
-        }
-
-        function clearAll() {
-             if(confirm('確定要清空所有行程嗎？無法復原喔！')) {
-                localStorage.removeItem('myTrips');
-                renderTrips();
-             }
-        }
-    </script>
-</body>
-</html>
