@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V11.0 (權限分級版)</title>
+    <title>旅伴 Go! V11.1 (介面完善版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -17,17 +17,24 @@
         
         /* 側邊欄 (電腦) */
         .sidebar { width: 280px; background: white; border-right: 1px solid #eee; display: none; flex-direction: column; padding: 20px; }
+        .sidebar-header { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
         .sidebar-btn { display: block; width: 100%; padding: 12px 15px; border: none; background: transparent; text-align: left; cursor: pointer; border-radius: 8px; font-size: 16px; color: #555; margin-bottom: 5px; transition: 0.2s; }
         .sidebar-btn:hover { background: #f1f3f4; }
         .sidebar-btn.active { background: #e8f0fe; color: var(--primary); font-weight: bold; }
 
-        /* 手機導航 */
+        /* 手機導航 (V11.1 更新：右側增加按鈕區) */
         .mobile-header { background: white; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
-        .app-title { font-weight: bold; font-size: 1.2em; color: var(--primary); margin: 0; display:flex; align-items:center; gap:8px;}
-        .trip-code { font-size: 0.8em; color: #999; background: #f1f3f4; padding: 4px 8px; border-radius: 12px; cursor: pointer; }
+        .header-left { display: flex; flex-direction: column; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
         
-        /* V11.0 狀態標籤 */
-        .role-badge { font-size: 0.6em; padding: 2px 6px; border-radius: 4px; vertical-align: middle; }
+        .app-title { font-weight: bold; font-size: 1.2em; color: var(--primary); margin: 0; display:flex; align-items:center; gap:8px;}
+        .trip-code { font-size: 0.8em; color: #666; background: #f1f3f4; padding: 4px 8px; border-radius: 12px; cursor: pointer; display: inline-block; margin-top: 4px;}
+        
+        /* 登出按鈕 (手機版) */
+        .logout-icon { font-size: 1.2em; color: #d93025; padding: 8px; cursor: pointer; background: #ffebee; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
+
+        /* 身分標籤 */
+        .role-badge { font-size: 0.6em; padding: 2px 6px; border-radius: 4px; vertical-align: middle; white-space: nowrap;}
         .role-editor { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         .role-viewer { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
 
@@ -134,19 +141,31 @@
 
     <div class="app-container" id="app" style="display:none;">
         <div class="sidebar">
-            <h2 id="pcTripTitle">...</h2>
+            <div class="sidebar-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <h2 id="pcTripTitle" style="margin:0;">...</h2>
+                    <span id="pcRoleBadge" class="role-badge"></span>
+                </div>
+                <small id="pcTripCode" style="color:#666; display:block; margin-top:5px; cursor:pointer;" onclick="copyCode()">代碼: --- <i class="far fa-copy"></i></small>
+            </div>
             <div id="pcDayList" class="sidebar-days"></div>
-            <button class="btn-full btn-cancel" onclick="logout()">退出</button>
+            <button class="btn-full btn-cancel" style="margin-top:auto;" onclick="logout()">退出</button>
         </div>
 
         <div style="flex:1; display:flex; flex-direction:column; height:100%;">
             <div class="mobile-header">
-                <div class="app-title">
-                    <span id="mobileTripTitle">行程</span>
-                    <span id="roleBadge" class="role-badge"></span>
+                <div class="header-left">
+                    <div class="app-title">
+                        <span id="mobileTripTitle">行程</span>
+                        <span id="mobileRoleBadge" class="role-badge"></span>
+                    </div>
+                    <span class="trip-code" id="mobileCode" onclick="copyCode()">代碼: ---</span>
                 </div>
-                <span class="trip-code" id="mobileCode" onclick="copyCode()">代碼: ---</span>
+                <div class="header-right">
+                    <div class="logout-icon" onclick="logout()" title="退出"><i class="fas fa-sign-out-alt"></i></div>
+                </div>
             </div>
+
             <div class="mobile-days-bar" id="mobileDayList"></div>
             <div class="main-content" id="listArea"></div>
             
@@ -200,11 +219,11 @@
         const db = getFirestore(app);
         
         let currentTripId = localStorage.getItem('lastTripId');
-        let currentPass = localStorage.getItem('lastTripPass'); // 儲存密碼
+        let currentPass = localStorage.getItem('lastTripPass');
         let currentDay = 1;
         let unsubscribe = null;
         let currentData = [];
-        let isEditor = false; // V11.0: 權限旗標
+        let isEditor = false;
 
         // 自動登入
         if(currentTripId) {
@@ -219,13 +238,12 @@
                 if(snap.exists()) {
                     const data = snap.data();
                     
-                    // V11.0: 驗證密碼
                     if (password && data.password && password === data.password) {
                         isEditor = true;
                         localStorage.setItem('lastTripPass', password);
                     } else {
                         isEditor = false;
-                        if(password) { // 有輸入但錯了
+                        if(password) {
                             if(!isAuto) alert("密碼錯誤，將以「檢視模式」載入");
                             localStorage.removeItem('lastTripPass');
                         }
@@ -274,13 +292,12 @@
 
             const id = Math.floor(100000 + Math.random()*900000).toString();
             try {
-                // V11.0: 將密碼寫入資料庫
                 await setDoc(doc(db, "trips", id), { 
                     name, password: pass, startDate: date, days: parseInt(days), createdAt: serverTimestamp() 
                 });
                 
                 currentTripId = id;
-                isEditor = true; // 建立者當然是編輯者
+                isEditor = true;
                 localStorage.setItem('lastTripId', id);
                 localStorage.setItem('lastTripPass', pass);
                 initApp({ name, days: parseInt(days) });
@@ -293,23 +310,32 @@
             document.getElementById('landing').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
             
+            // 手機版標題
             document.getElementById('mobileTripTitle').innerText = data.name;
-            document.getElementById('pcTripTitle').innerText = data.name;
             document.getElementById('mobileCode').innerText = `代碼: ${currentTripId}`;
+            
+            // 電腦版側邊欄標題
+            document.getElementById('pcTripTitle').innerText = data.name;
+            document.getElementById('pcTripCode').innerHTML = `代碼: ${currentTripId} <i class="far fa-copy"></i>`;
 
-            // V11.0: 顯示身分標籤 & 控制 FAB 按鈕
-            const badge = document.getElementById('roleBadge');
+            // 設定身分標籤 & 按鈕
+            const mBadge = document.getElementById('mobileRoleBadge');
+            const pcBadge = document.getElementById('pcRoleBadge');
             const fab = document.getElementById('fabBtn');
             
+            let badgeText = "檢視者";
+            let badgeClass = "role-badge role-viewer";
+            
             if(isEditor) {
-                badge.innerText = "編輯者";
-                badge.className = "role-badge role-editor";
-                fab.style.display = "flex"; // 顯示新增鈕
+                badgeText = "編輯者";
+                badgeClass = "role-badge role-editor";
+                fab.style.display = "flex";
             } else {
-                badge.innerText = "檢視者";
-                badge.className = "role-badge role-viewer";
-                fab.style.display = "none"; // 隱藏新增鈕
+                fab.style.display = "none";
             }
+
+            mBadge.innerText = badgeText; mBadge.className = badgeClass;
+            pcBadge.innerText = badgeText; pcBadge.className = badgeClass;
 
             renderDayNav(data.days);
             changeDay(1);
@@ -382,7 +408,6 @@
                     const stayHtml = item.duration ? `<span class="badge stay"><i class="far fa-clock"></i> 停 ${formatDuration(item.duration)}</span>` : '';
                     const noteHtml = item.note ? `<span class="badge note"><i class="far fa-sticky-note"></i> ${item.note}</span>` : '';
 
-                    // V11.0: 根據權限產生按鈕
                     let actionButtons = '';
                     if(isEditor) {
                         actionButtons = `
@@ -402,7 +427,6 @@
             });
         }
 
-        // Modal 控制
         window.closeAllModals = () => {
             document.body.classList.remove('modal-active');
             document.getElementById('modalOverlay').style.display = 'none';
@@ -412,10 +436,9 @@
         }
 
         window.openItemModal = (id = null) => {
-            if(!isEditor) return; // 安全檢查
+            if(!isEditor) return;
             document.body.classList.add('modal-active');
             document.getElementById('modalOverlay').style.display = 'block';
-            
             const sheet = document.getElementById('itemModalSheet');
             if(window.innerWidth >= 769) { sheet.style.opacity = '1'; sheet.style.pointerEvents = 'auto'; } else { sheet.style.bottom = '0'; }
 
