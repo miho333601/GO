@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V10.1 (流暢體驗版)</title>
+    <title>旅伴 Go! V10.2 (電腦手機雙棲版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* === 全局設定 === */
         :root { --primary: #4285F4; --bg: #f8f9fa; --card-bg: #ffffff; }
         body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; color: #333; overflow: hidden; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -14,15 +15,16 @@
         /* === 佈局 === */
         .app-container { display: flex; width: 100%; height: 100%; flex-direction: column; }
         
-        /* 側邊欄 (電腦版) */
+        /* 電腦版側邊欄 */
         .sidebar { width: 280px; background: white; border-right: 1px solid #eee; display: none; flex-direction: column; padding: 20px; }
-        .sidebar-btn { display: block; width: 100%; padding: 12px 15px; border: none; background: transparent; text-align: left; cursor: pointer; border-radius: 8px; font-size: 16px; color: #555; margin-bottom: 5px; }
+        .sidebar-btn { display: block; width: 100%; padding: 12px 15px; border: none; background: transparent; text-align: left; cursor: pointer; border-radius: 8px; font-size: 16px; color: #555; margin-bottom: 5px; transition: 0.2s; }
+        .sidebar-btn:hover { background: #f1f3f4; }
         .sidebar-btn.active { background: #e8f0fe; color: var(--primary); font-weight: bold; }
 
-        /* 手機導航 */
+        /* 手機版導航 */
         .mobile-header { background: white; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
         .app-title { font-weight: bold; font-size: 1.2em; color: var(--primary); margin: 0; }
-        .trip-code { font-size: 0.8em; color: #999; background: #f1f3f4; padding: 4px 8px; border-radius: 12px; }
+        .trip-code { font-size: 0.8em; color: #999; background: #f1f3f4; padding: 4px 8px; border-radius: 12px; cursor: pointer;}
 
         .mobile-days-bar { display: flex; overflow-x: auto; background: white; padding: 10px 15px; border-bottom: 1px solid #eee; white-space: nowrap; gap: 10px; scrollbar-width: none; }
         .mobile-days-bar::-webkit-scrollbar { display: none; }
@@ -31,7 +33,7 @@
 
         .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 100px; position: relative; }
 
-        /* 卡片 */
+        /* 卡片樣式 */
         .spot-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 0; display: flex; overflow: hidden; border: 1px solid #f0f0f0; position: relative; z-index: 2; }
         .time-col { width: 75px; background: #e8f0fe; color: #1967d2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; font-weight: 700; font-size: 0.95em; text-align: center; border-right: 1px solid #dbeafe; }
         .info-col { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -42,11 +44,11 @@
         .badge.note { background: #fff3e0; color: #ef6c00; }
         
         .actions-col { width: 45px; border-left: 1px solid #f0f0f0; display: flex; flex-direction: column; }
-        .act-btn { flex: 1; border: none; background: white; color: #ccc; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .act-btn:active { background: #f0f0f0; color: var(--primary); }
-        .act-btn.del:active { color: #d32f2f; background: #ffebee; }
+        .act-btn { flex: 1; border: none; background: white; color: #ccc; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .act-btn:hover { background: #f5f5f5; color: var(--primary); }
+        .act-btn.del:hover { color: #d32f2f; background: #ffebee; }
 
-        /* 交通 */
+        /* 交通連接器 */
         .transport-connector { display: flex; align-items: center; justify-content: center; padding: 12px 0; position: relative; }
         .transport-connector::before { content: ''; position: absolute; top: 0; bottom: 0; left: 37px; width: 2px; background: repeating-linear-gradient(to bottom, #ddd 0, #ddd 6px, transparent 6px, transparent 12px); z-index: 0; }
         .transport-pill { background: white; border: 1px solid #eee; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; color: #666; position: relative; z-index: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; }
@@ -55,12 +57,19 @@
         .fab-btn { position: absolute; bottom: 25px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 4px 15px rgba(66,133,244,0.4); font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; z-index: 100; }
         .fab-btn:active { transform: scale(0.9); }
 
-        /* Modal */
+        /* === 視窗核心 CSS (關鍵修正) === */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; transition: opacity 0.3s; }
-        .modal-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; padding: 25px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); max-height: 90vh; overflow-y: auto; }
+        .modal-sheet { 
+            position: fixed; bottom: -100%; left: 0; width: 100%; 
+            background: white; border-radius: 20px 20px 0 0; padding: 25px; 
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; 
+            transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); 
+            max-height: 90vh; overflow-y: auto; 
+        }
         .modal-active .modal-overlay { display: block; opacity: 1; }
         .modal-active .modal-sheet { bottom: 0; }
 
+        /* 表單元件 */
         .form-group { margin-bottom: 15px; }
         label { display: block; font-size: 0.9em; font-weight: bold; color: #555; margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; background: #fff; appearance: none; }
@@ -71,17 +80,36 @@
         .btn-cancel { background: #f1f3f4; color: #333; margin-top: 10px; }
         .btn-map { background: #e8f0fe; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
 
-        /* 歡迎頁 */
+        /* === 歡迎頁 (V10.2 優化：不強制彈窗) === */
         #landing { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
-        .landing-input { width: 100%; max-width: 300px; padding: 15px; font-size: 18px; text-align: center; border: 2px solid #eee; border-radius: 12px; margin-bottom: 15px; }
-        .error-msg { color: #d32f2f; font-size: 0.9em; margin-bottom: 15px; display: none; }
+        .landing-options { width: 100%; max-width: 300px; transition: 0.3s; }
+        .landing-form { display: none; width: 100%; max-width: 300px; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
+        /* === RWD: 電腦版關鍵修正 === */
         @media (min-width: 769px) {
             .app-container { flex-direction: row; }
             .sidebar { display: flex; }
             .mobile-header, .mobile-days-bar { display: none; }
-            .modal-sheet { width: 400px; left: 50%; bottom: 50%; transform: translate(-50%, 50%); border-radius: 16px; }
-            .modal-active .modal-sheet { bottom: 50%; }
+            
+            /* V10.2: 修正電腦版視窗位置 (不再卡底部) */
+            .modal-sheet { 
+                width: 450px; 
+                left: 50%; 
+                top: 50%; /* 使用 Top 定位 */
+                bottom: auto !important; /* 強制取消 Bottom 定位 */
+                transform: translate(-50%, -50%) scale(0.9); 
+                border-radius: 16px; 
+                opacity: 0; 
+                pointer-events: none;
+                transition: opacity 0.3s, transform 0.3s;
+            }
+            .modal-active .modal-sheet { 
+                opacity: 1; 
+                pointer-events: auto;
+                bottom: auto !important; /* 再次確保不被覆蓋 */
+                transform: translate(-50%, -50%) scale(1);
+            }
         }
     </style>
 </head>
@@ -89,13 +117,26 @@
 
     <div id="landing">
         <h1 style="color:var(--primary); font-size: 2.5em; margin-bottom: 10px;">旅伴 Go!</h1>
-        <p style="color:#888; margin-bottom: 30px;">輸入代碼，開始您的旅程</p>
+        <p style="color:#888; margin-bottom: 40px;">輕鬆規劃，即時同步</p>
         
-        <div id="loginError" class="error-msg"></div>
-        
-        <input type="text" id="codeEnter" class="landing-input" placeholder="行程代碼 (6碼)">
-        <button id="btnLogin" class="btn-full btn-primary" style="max-width:300px;" onclick="loadByCode()">載入行程</button>
-        <button id="btnCreate" class="btn-full btn-cancel" style="max-width:300px;" onclick="openCreateModal()">建立新行程</button>
+        <div id="landingOptions" class="landing-options">
+            <button class="btn-full btn-primary" onclick="showLandingForm('login')">我有代碼，載入行程</button>
+            <button class="btn-full btn-cancel" onclick="showLandingForm('create')">建立新行程</button>
+        </div>
+
+        <div id="landingLogin" class="landing-form">
+            <input type="text" id="codeEnter" placeholder="請輸入 6 位數代碼">
+            <button class="btn-full btn-primary" onclick="loadByCode()">確定載入</button>
+            <button class="btn-full btn-cancel" onclick="resetLanding()">返回</button>
+        </div>
+
+        <div id="landingCreate" class="landing-form">
+            <input type="text" id="newTripName" placeholder="旅程名稱 (例：日本五日遊)">
+            <input type="date" id="newTripDate">
+            <input type="number" id="newTripDays" placeholder="天數" value="5">
+            <button class="btn-full btn-primary" onclick="createNewTrip()">開始規劃</button>
+            <button class="btn-full btn-cancel" onclick="resetLanding()">返回</button>
+        </div>
     </div>
 
     <div class="app-container" id="app" style="display:none;">
@@ -145,15 +186,6 @@
         <button class="btn-full btn-cancel" onclick="closeAllModals()">取消</button>
     </div>
 
-    <div id="createModalSheet" class="modal-sheet">
-        <h3 style="margin-top:0; color:var(--primary);">✈️ 建立新旅程</h3>
-        <div class="form-group"><label>旅程名稱</label><input type="text" id="newTripName" placeholder="例如：東京五日遊"></div>
-        <div class="form-group"><label>出發日期</label><input type="date" id="newTripDate"></div>
-        <div class="form-group"><label>天數</label><input type="number" id="newTripDays" value="3"></div>
-        <button class="btn-full btn-primary" onclick="createNewTrip()">開始規劃</button>
-        <button class="btn-full btn-cancel" onclick="closeAllModals()">取消</button>
-    </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDoc, doc, query, where, onSnapshot, setDoc, serverTimestamp, updateDoc, deleteDoc } 
@@ -178,19 +210,28 @@
         let unsubscribe = null;
         let currentData = [];
 
-        // 自動登入
+        // 自動登入檢查
         if(currentTripId) {
-            document.getElementById('codeEnter').value = currentTripId;
-            tryLogin(currentTripId);
+            loadByCode(currentTripId);
         }
 
-        async function tryLogin(code) {
-            const btn = document.getElementById('btnLogin');
-            const errDiv = document.getElementById('loginError');
-            btn.innerText = "連線中...";
-            btn.disabled = true;
-            errDiv.style.display = 'none';
+        // === V10.2 歡迎頁控制 ===
+        window.showLandingForm = (type) => {
+            document.getElementById('landingOptions').style.display = 'none';
+            if(type === 'login') document.getElementById('landingLogin').style.display = 'block';
+            else document.getElementById('landingCreate').style.display = 'block';
+        }
 
+        window.resetLanding = () => {
+            document.getElementById('landingOptions').style.display = 'block';
+            document.getElementById('landingLogin').style.display = 'none';
+            document.getElementById('landingCreate').style.display = 'none';
+        }
+
+        window.loadByCode = async (autoCode = null) => {
+            const code = autoCode || document.getElementById('codeEnter').value.trim();
+            if(!code) return alert("請輸入代碼");
+            
             try {
                 const snap = await getDoc(doc(db, "trips", code));
                 if(snap.exists()) {
@@ -198,30 +239,14 @@
                     localStorage.setItem('lastTripId', code);
                     initApp(snap.data());
                 } else {
-                    throw new Error("找不到此行程代碼");
+                    alert("找不到此行程代碼");
+                    localStorage.removeItem('lastTripId'); // 清除錯誤快取
+                    resetLanding();
                 }
             } catch (e) {
-                console.error("Login Error:", e);
-                errDiv.innerText = "連線失敗：" + e.message;
-                errDiv.style.display = 'block';
-                localStorage.removeItem('lastTripId'); // 清除無效ID
-            } finally {
-                btn.innerText = "載入行程";
-                btn.disabled = false;
+                console.error(e);
+                alert("連線錯誤，請稍後再試。\n(如果您剛設定 API 限制，請等待 5 分鐘)");
             }
-        }
-
-        window.loadByCode = () => {
-            const code = document.getElementById('codeEnter').value.trim();
-            if(!code) return alert("請輸入代碼");
-            tryLogin(code);
-        }
-
-        // 建立新行程 (UI 操作)
-        window.openCreateModal = () => {
-            document.body.classList.add('modal-active');
-            document.getElementById('modalOverlay').style.display = 'block';
-            document.getElementById('createModalSheet').style.bottom = '0';
         }
 
         window.createNewTrip = async () => {
@@ -236,7 +261,6 @@
                 await setDoc(doc(db, "trips", id), { name, startDate: date, days: parseInt(days), createdAt: serverTimestamp() });
                 currentTripId = id;
                 localStorage.setItem('lastTripId', id);
-                closeAllModals();
                 initApp({ name, days: parseInt(days) });
             } catch(e) {
                 alert("建立失敗：" + e.message);
@@ -333,9 +357,8 @@
                         </div>`;
                 });
             }, (error) => {
-                // 處理權限錯誤 (例如 API Key 剛改還沒生效)
                 console.error("Listen Error:", error);
-                document.getElementById('listArea').innerHTML = `<div style='text-align:center;color:red;margin-top:20px;'>讀取失敗<br>請等待 5 分鐘後重新整理<br>(API 權限更新中)</div>`;
+                document.getElementById('listArea').innerHTML = `<div style='text-align:center;color:red;margin-top:20px;'>讀取失敗<br>API 權限更新中...<br>請 5 分鐘後重新整理</div>`;
             });
         }
 
@@ -344,16 +367,32 @@
             document.body.classList.remove('modal-active');
             document.getElementById('modalOverlay').style.display = 'none';
             document.getElementById('itemModalSheet').style.bottom = '-100%';
-            document.getElementById('createModalSheet').style.bottom = '-100%';
+            
+            // V10.2: 電腦版也需要隱藏 (Opacity)
+            const sheets = document.querySelectorAll('.modal-sheet');
+            sheets.forEach(s => { s.style.opacity = '0'; s.style.pointerEvents = 'none'; });
+            // 手機版復原
+            if(window.innerWidth < 769) {
+                sheets.forEach(s => { s.style.opacity = '1'; s.style.pointerEvents = 'auto'; s.style.bottom = '-100%'; });
+            }
         }
 
         window.openItemModal = (id = null) => {
             document.body.classList.add('modal-active');
             document.getElementById('modalOverlay').style.display = 'block';
-            document.getElementById('itemModalSheet').style.bottom = '0';
-            document.getElementById('editId').value = id || "";
+            
+            const sheet = document.getElementById('itemModalSheet');
+            // V10.2: 電腦版顯示修正
+            if(window.innerWidth >= 769) {
+                sheet.style.opacity = '1';
+                sheet.style.pointerEvents = 'auto';
+            } else {
+                sheet.style.bottom = '0';
+            }
 
+            document.getElementById('editId').value = id || "";
             const routeBtn = document.getElementById('routeBtn');
+            
             if(id) {
                 const item = currentData.find(x => x.id === id);
                 document.getElementById('locInput').value = item.location;
@@ -414,7 +453,8 @@
         window.delItem = delItem;
         window.openGoogleMapsRoute = openGoogleMapsRoute;
         window.loadByCode = loadByCode;
-        window.openCreateModal = openCreateModal;
+        window.showLandingForm = showLandingForm;
+        window.resetLanding = resetLanding;
         window.createNewTrip = createNewTrip;
         window.logout = logout;
         window.copyCode = copyCode;
