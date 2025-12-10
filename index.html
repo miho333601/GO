@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旅伴 Go! V8.1 (完美功能版)</title>
+    <title>旅伴 Go! V9.0 (視覺流暢版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* === 基礎樣式 (基於 V7.4 但美化過) === */
+        /* === 基礎樣式 === */
         body { font-family: 'Noto Sans TC', sans-serif; background: #f0f2f5; margin: 0; display: flex; height: 100vh; color: #333; }
         
         /* 側邊欄 */
@@ -29,15 +29,19 @@
         /* 列表區 */
         #listArea { 
             flex: 1; padding: 20px; overflow-y: auto; background-color: #f8f9fa; 
-            padding-bottom: 80px; /* 預留按鈕空間 */
+            padding-bottom: 100px;
         }
 
-        /* === 卡片樣式 (美化版) === */
+        /* === V9.0 新版卡片樣式 === */
+        .timeline-container {
+            display: flex; flex-direction: column; align-items: stretch;
+        }
+
         .spot-card {
-            background: white; padding: 0; margin-bottom: 15px; 
+            background: white; padding: 0; margin: 0; /* 移除 margin，改由連接器控制間距 */
             border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             display: flex; overflow: hidden; border: 1px solid #eee;
-            transition: transform 0.2s;
+            transition: transform 0.2s; position: relative; z-index: 2;
         }
         .spot-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
 
@@ -47,21 +51,39 @@
             border-right: 1px solid #d2e3fc; padding: 10px; font-weight: bold;
         }
         
-        .info-col { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; }
-        .spot-title { font-size: 1.1em; font-weight: bold; color: #202124; margin-bottom: 6px; }
+        .info-col { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: center; }
+        .spot-title { font-size: 1.2em; font-weight: bold; color: #202124; margin-bottom: 8px; }
         
-        /* 標籤區 */
-        .badges { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.85em; color: #5f6368; }
-        .badge { background: #f1f3f4; padding: 2px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; }
-        .badge.transport { background: #e6f4ea; color: #137333; }
-        .badge.note { background: #fef7e0; color: #b06000; }
+        .spot-details { font-size: 0.9em; color: #5f6368; display: flex; flex-direction: column; gap: 4px; }
+        .detail-row { display: flex; align-items: center; gap: 6px; }
+        .note-tag { background: #fff8e1; color: #f57f17; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; display: inline-block;}
 
-        .actions-col { display: flex; flex-direction: column; border-left: 1px solid #eee; }
-        .act-btn { flex: 1; width: 40px; border: none; background: white; cursor: pointer; color: #9aa0a6; transition: 0.2s; }
+        .actions-col { display: flex; flex-direction: column; border-left: 1px solid #eee; width: 40px; }
+        .act-btn { flex: 1; border: none; background: white; cursor: pointer; color: #9aa0a6; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
         .act-btn:hover { background: #f8f9fa; color: #333; }
         .act-btn.del:hover { background: #fce8e6; color: #d93025; }
 
-        /* 除錯區 (保留但縮小) */
+        /* === V9.0 交通連接器樣式 === */
+        .transport-connector {
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px 0; position: relative; color: #666; font-size: 0.85em;
+        }
+        /* 虛線 */
+        .transport-connector::before {
+            content: ''; position: absolute; top: 0; bottom: 0; left: 35px; /* 對齊左側 */
+            width: 2px; background: repeating-linear-gradient(to bottom, #ccc 0, #ccc 4px, transparent 4px, transparent 8px);
+            z-index: 0;
+        }
+        /* 交通標籤 */
+        .transport-badge {
+            background: #f1f3f4; padding: 4px 12px; border-radius: 20px;
+            z-index: 1; border: 1px solid #e0e0e0;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .transport-badge i { color: #1a73e8; }
+
+        /* 除錯區 */
         .debug-box { font-size: 12px; color: #aaa; padding: 10px; text-align: center; border-top: 1px solid #eee; }
 
         /* 按鈕與彈窗 */
@@ -72,7 +94,7 @@
             color: white; border: none; font-size: 28px; 
             cursor: pointer; box-shadow: 0 4px 15px rgba(66,133,244,0.4); 
             display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s;
+            transition: transform 0.2s; z-index: 100;
         }
         .fab-btn:active { transform: scale(0.95); }
 
@@ -82,13 +104,14 @@
         input, select { width: 100%; padding: 12px; margin: 6px 0 15px 0; border: 1px solid #dadce0; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         label { font-weight: bold; font-size: 0.9em; color: #5f6368; }
         
-        /* 地圖預覽 */
         #mapPreview { width: 100%; height: 150px; background: #eee; border-radius: 8px; margin-bottom: 15px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #999; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .btn-primary { background: #1a73e8; color: white; }
         .btn-cancel { background: #f1f3f4; color: #333; }
+        
+        .big-btn { width: 100%; padding: 12px; border:none; background:#34A853; color:white; border-radius:6px; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;}
     </style>
 </head>
 <body>
@@ -108,8 +131,7 @@
             <h2 id="currentDayTitle" style="margin:0; color:#202124;">Day 1</h2>
         </div>
 
-        <div id="listArea">
-            </div>
+        <div id="listArea"></div>
         
         <button class="fab-btn" onclick="openModal()">+</button>
     </div>
@@ -119,7 +141,13 @@
             <h3 style="margin-top:0; color:#1a73e8;">📍 行程編輯</h3>
             <input type="hidden" id="editId">
 
-            <label>地點名稱 (輸入後點空白處顯示地圖)</label>
+            <div id="route-box" style="display:none;">
+                <button class="big-btn" onclick="openGoogleMapsRoute()">
+                    <i class="fas fa-directions"></i> 規劃路線 (從上一站)
+                </button>
+            </div>
+
+            <label>地點名稱</label>
             <input type="text" id="locInput" placeholder="例如：台北101" onblur="updateMap(this.value)">
             
             <div id="mapPreview">地圖預覽區</div>
@@ -130,12 +158,12 @@
                     <input type="time" id="timeInput">
                 </div>
                 <div style="flex:1;">
-                    <label>預計停留/車程 (分)</label>
-                    <input type="number" id="durationInput" placeholder="60">
+                    <label>預計停留 (分)</label>
+                    <input type="number" id="durationInput" placeholder="90">
                 </div>
             </div>
 
-            <label>交通方式 (前往此地)</label>
+            <label>交通方式 (如何抵達這裡?)</label>
             <select id="transportInput">
                 <option value="無">請選擇...</option>
                 <option value="開車">🚗 開車</option>
@@ -185,12 +213,11 @@
         let currentTripId = localStorage.getItem('lastTripId');
         let currentDay = 1;
         let unsubscribe = null;
-        let currentData = []; // 暫存當頁資料
+        let currentData = [];
 
-        // 初始化檢查
+        // 初始化
         if(currentTripId) {
             document.getElementById('codeEnter').value = currentTripId;
-            // 自動嘗試載入
             getDoc(doc(db, "trips", currentTripId)).then(snap => {
                 if(snap.exists()) initApp(snap.data());
                 else document.getElementById('landing').style.display = 'flex';
@@ -208,8 +235,8 @@
         }
 
         window.createNew = async () => {
-            const name = prompt("請輸入旅程名稱 (如：日本五日遊)");
-            const days = prompt("請輸入天數 (數字)", "5");
+            const name = prompt("旅程名稱 (如：日本行)");
+            const days = prompt("天數", "5");
             if(name && days) {
                 const id = Math.floor(100000 + Math.random()*900000).toString();
                 await setDoc(doc(db, "trips", id), { name, days: parseInt(days), createdAt: serverTimestamp() });
@@ -240,6 +267,16 @@
             listenData();
         }
 
+        // 時間格式化小工具
+        function formatDuration(minutes) {
+            if(!minutes) return "";
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            if(h > 0 && m > 0) return `${h}小時${m}分鐘`;
+            if(h > 0) return `${h}小時`;
+            return `${m}分鐘`;
+        }
+
         function listenData() {
             if(unsubscribe) unsubscribe();
             const q = query(collection(db, "items"), where("tripId", "==", currentTripId));
@@ -254,31 +291,49 @@
                     if(data.day == currentDay) currentData.push({ id: doc.id, ...data });
                 });
 
-                // 排序 (時間)
                 currentData.sort((a, b) => (a.time || "23:59").localeCompare(b.time || "23:59"));
-
                 document.getElementById('debugConsole').innerText = `D${currentDay}: ${currentData.length} 筆`;
 
                 if(currentData.length === 0) listDiv.innerHTML = "<div style='text-align:center;color:#ccc;margin-top:50px;'>📭 尚無行程，點 + 新增</div>";
 
-                // === V8.1 渲染核心：使用 V7.4 的穩定字串拼接，但加上 V7.6 的美觀 HTML ===
-                currentData.forEach(item => {
+                currentData.forEach((item, index) => {
+                    // 1. 如果不是第一筆，且有交通方式，插入「交通連接器」
+                    if (index > 0 && item.transport && item.transport !== '無') {
+                        let icon = 'fas fa-arrow-down';
+                        if(item.transport.includes('開車')) icon = 'fas fa-car';
+                        else if(item.transport.includes('大眾')) icon = 'fas fa-subway';
+                        else if(item.transport.includes('步')) icon = 'fas fa-walking';
+                        else if(item.transport.includes('單車')) icon = 'fas fa-bicycle';
+                        
+                        listDiv.innerHTML += `
+                            <div class="transport-connector">
+                                <div class="transport-badge">
+                                    <i class="${icon}"></i> ${item.transport}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    // 2. 格式化停留時間
+                    const durationText = formatDuration(item.duration);
+                    
+                    // 3. 渲染卡片
                     const timeDisplay = item.time || "--:--";
                     const locDisplay = item.location || "未命名";
-                    const badges = [];
-                    
-                    if(item.duration) badges.push(`<span class="badge"><i class="far fa-clock"></i> ${item.duration}分</span>`);
-                    if(item.transport && item.transport !== '無') badges.push(`<span class="badge transport"><i class="fas fa-car"></i> ${item.transport}</span>`);
-                    if(item.note) badges.push(`<span class="badge note"><i class="far fa-sticky-note"></i> ${item.note}</span>`);
+                    const noteHtml = item.note ? `<div class="detail-row"><span class="note-tag"><i class="far fa-sticky-note"></i> ${item.note}</span></div>` : '';
+                    const durationHtml = durationText ? `<div class="detail-row"><i class="far fa-clock" style="color:#aaa;"></i> 預計停留 ${durationText}</div>` : '';
 
-                    const html = `
+                    listDiv.innerHTML += `
                         <div class="spot-card">
                             <div class="time-col">
                                 <div>${timeDisplay}</div>
                             </div>
                             <div class="info-col">
                                 <div class="spot-title">${locDisplay}</div>
-                                <div class="badges">${badges.join('')}</div>
+                                <div class="spot-details">
+                                    ${durationHtml}
+                                    ${noteHtml}
+                                </div>
                             </div>
                             <div class="actions-col">
                                 <button class="act-btn" onclick="openModal('${item.id}')"><i class="fas fa-pen"></i></button>
@@ -286,23 +341,21 @@
                             </div>
                         </div>
                     `;
-                    listDiv.innerHTML += html;
                 });
             });
         }
 
-        // 地圖預覽
+        // Google Maps & Modal
         window.updateMap = (loc) => {
             const div = document.getElementById('mapPreview');
             if(!loc) div.innerHTML = "地圖預覽區";
             else div.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0" src="https://www.google.com/maps?q=${encodeURIComponent(loc)}&output=embed"></iframe>`;
         }
 
-        // 彈窗與存檔
         window.openModal = (id = null) => {
             document.getElementById('myModal').style.display = 'flex';
             document.getElementById('editId').value = id || "";
-            updateMap(''); // 重置地圖
+            updateMap('');
 
             if(id) {
                 const item = currentData.find(x => x.id === id);
@@ -311,12 +364,30 @@
                 document.getElementById('durationInput').value = item.duration || "";
                 document.getElementById('transportInput').value = item.transport || "無";
                 document.getElementById('noteInput').value = item.note || "";
+                document.getElementById('route-box').style.display = 'none';
                 updateMap(item.location);
             } else {
                 ['locInput','timeInput','durationInput','noteInput'].forEach(i => document.getElementById(i).value = '');
                 document.getElementById('transportInput').value = "無";
+                
+                // 上一站按鈕邏輯
+                const routeBox = document.getElementById('route-box');
+                if(currentData.length > 0) {
+                    routeBox.style.display = 'block';
+                    window.lastLoc = currentData[currentData.length - 1].location;
+                } else {
+                    routeBox.style.display = 'none';
+                }
             }
         }
+        
+        window.openGoogleMapsRoute = () => {
+            const current = document.getElementById('locInput').value;
+            let url = `https://www.google.com/maps?q=${encodeURIComponent(window.lastLoc)}`;
+            if(current) url += `/${encodeURIComponent(current)}`;
+            window.open(url, '_blank');
+        }
+
         window.closeModal = () => document.getElementById('myModal').style.display = 'none';
 
         window.saveItem = async () => {
@@ -330,24 +401,22 @@
                 transport: document.getElementById('transportInput').value,
                 note: document.getElementById('noteInput').value
             };
-            
             if(!data.location) return alert("地點必填");
-
             if(id) await updateDoc(doc(db, "items", id), data);
             else await addDoc(collection(db, "items"), { ...data, createdAt: serverTimestamp() });
-            
             closeModal();
         }
 
         window.delItem = async (id) => { if(confirm("確定刪除？")) await deleteDoc(doc(db, "items", id)); }
         
-        // 匯出給 HTML 用
+        // Export
         window.changeDay = changeDay;
         window.openModal = openModal;
         window.closeModal = closeModal;
         window.saveItem = saveItem;
         window.delItem = delItem;
         window.updateMap = updateMap;
+        window.openGoogleMapsRoute = openGoogleMapsRoute;
         window.loadByCode = loadByCode;
         window.createNew = createNew;
     </script>
