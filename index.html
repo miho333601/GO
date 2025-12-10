@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V16.0 (分流記帳版)</title>
+    <title>旅伴 Go! V16.1 (視窗修復版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -42,7 +42,6 @@
 
         .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 120px; position: relative; }
 
-        /* 卡片樣式 */
         .spot-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 0; display: flex; overflow: hidden; border: 1px solid #f0f0f0; position: relative; z-index: 2; }
         .time-col { width: 75px; background: #e8f0fe; color: #1967d2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; font-weight: 700; font-size: 0.95em; text-align: center; border-right: 1px solid #dbeafe; }
         .info-col { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -50,13 +49,13 @@
         .badges { display: flex; gap: 6px; flex-wrap: wrap; }
         .badge { font-size: 0.8em; padding: 3px 8px; border-radius: 6px; background: #f5f5f5; color: #666; display: flex; align-items: center; gap: 4px; }
         .badge.stay { background: #e0f2f1; color: #00695c; }
-        .badge.cost { background: #fff3e0; color: #f57f17; border: 1px solid #ffe0b2; } /* 金錢標籤 */
+        .badge.cost { background: #fff3e0; color: #f57f17; border: 1px solid #ffe0b2; }
         .badge.creator { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
         
         .actions-col { width: 50px; border-left: 1px solid #f0f0f0; display: flex; flex-direction: column; }
         .act-btn { flex: 1; border: none; background: white; color: #ccc; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .act-btn:hover { background: #f5f5f5; color: var(--primary); }
-        .act-btn.money { color: #f57f17; background: #fff8e1; } /* 記帳按鈕 */
+        .act-btn.money { color: #f57f17; background: #fff8e1; }
         .act-btn.del:hover { color: #d32f2f; background: #ffebee; }
 
         .transport-connector { display: flex; align-items: center; justify-content: center; padding: 12px 0; position: relative; }
@@ -67,10 +66,19 @@
         .fab-btn { position: absolute; bottom: 25px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 4px 15px rgba(66,133,244,0.4); font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; z-index: 100; }
         .fab-btn:active { transform: scale(0.9); }
 
+        /* === 視窗核心 CSS (V16.1 修復版) === */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; transition: opacity 0.3s; }
-        .modal-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; padding: 25px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); max-height: 90vh; overflow-y: auto; }
+        .modal-sheet { 
+            position: fixed; bottom: -100%; left: 0; width: 100%; 
+            background: white; border-radius: 20px 20px 0 0; padding: 25px; 
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; 
+            transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); 
+            max-height: 90vh; overflow-y: auto; 
+        }
+        
+        /* V16.1 關鍵：只有加上 .sheet-active 的視窗才會滑上來 */
+        .modal-sheet.sheet-active { bottom: 0; }
         .modal-active .modal-overlay { display: block; opacity: 1; }
-        .modal-active .modal-sheet { bottom: 0; }
 
         #mapPreview { width: 100%; height: 150px; background: #eee; border-radius: 10px; margin-top: 10px; margin-bottom: 15px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.9em; }
 
@@ -84,7 +92,6 @@
         .btn-cancel { background: #f1f3f4; color: #333; margin-top: 10px; }
         .btn-map { background: #e8f0fe; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
 
-        /* 分帳功能區塊 */
         .split-bill-box { background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2; margin-bottom: 15px; }
         .split-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #d7ccc8; padding-bottom: 5px; }
         .split-row:last-child { border-bottom: none; margin-bottom: 0; }
@@ -106,8 +113,18 @@
             .app-container { flex-direction: row; }
             .sidebar { display: flex; }
             .mobile-header, .mobile-days-bar { display: none; }
-            .modal-sheet { width: 450px; left: 50%; top: 50%; bottom: auto !important; transform: translate(-50%, -50%) scale(0.95); border-radius: 16px; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; }
-            .modal-active .modal-sheet { opacity: 1; pointer-events: auto; bottom: auto !important; transform: translate(-50%, -50%) scale(1); }
+            /* V16.1 電腦版 CSS 修正 */
+            .modal-sheet { 
+                width: 450px; left: 50%; top: 50%; bottom: auto !important; 
+                transform: translate(-50%, -50%) scale(0.95); 
+                border-radius: 16px; opacity: 0; pointer-events: none; 
+                transition: opacity 0.3s, transform 0.3s; 
+            }
+            /* 只有加上 .sheet-active 才會顯示 */
+            .modal-sheet.sheet-active { 
+                opacity: 1; pointer-events: auto; bottom: auto !important; 
+                transform: translate(-50%, -50%) scale(1); 
+            }
         }
     </style>
 </head>
@@ -204,7 +221,9 @@
 
     <div id="accountModalSheet" class="modal-sheet">
         <h3 style="margin-top:0; color:#f57f17;"><i class="fas fa-coins"></i> 記帳</h3>
-        <input type="hidden" id="accountId"> <div class="form-group" style="background:#fff8e1; padding:10px; border-radius:10px; text-align:center;">
+        <input type="hidden" id="accountId"> 
+        
+        <div class="form-group" style="background:#fff8e1; padding:10px; border-radius:10px; text-align:center;">
             <strong id="accountTitle" style="color:#5d4037; font-size:1.1em;">項目名稱</strong>
         </div>
 
@@ -446,7 +465,7 @@
                             <button class="act-btn money" onclick="openAccountModal('${item.id}')"><i class="fas fa-dollar-sign"></i></button>
                     `;
                     
-                    if(isEditor || item.createdBy === '您') { // V16.0 簡化
+                    if(isEditor || item.createdBy === '您') { 
                          actionButtons += `<button class="act-btn del" onclick="delItem('${item.id}')"><i class="fas fa-trash"></i></button>`;
                     }
                     actionButtons += `</div>`;
@@ -464,33 +483,28 @@
         window.closeAllModals = () => {
             document.body.classList.remove('modal-active');
             document.getElementById('modalOverlay').style.display = 'none';
-            document.getElementById('itemModalSheet').style.bottom = '-100%';
-            document.getElementById('accountModalSheet').style.bottom = '-100%';
-            document.getElementById('moneyModalSheet').style.bottom = '-100%';
+            // V16.1 修正：移除所有 sheet-active class
+            document.querySelectorAll('.modal-sheet').forEach(el => el.classList.remove('sheet-active'));
         }
 
         window.showMoneyModal = () => {
             document.body.classList.add('modal-active');
             document.getElementById('modalOverlay').style.display = 'block';
-            document.getElementById('moneyModalSheet').style.bottom = '0';
+            document.getElementById('moneyModalSheet').classList.add('sheet-active');
         }
 
-        // V16.0: 純行程編輯
         window.openItemModal = (id = null) => {
             document.body.classList.add('modal-active');
             document.getElementById('modalOverlay').style.display = 'block';
-            const sheet = document.getElementById('itemModalSheet');
-            if(window.innerWidth >= 769) { sheet.style.opacity = '1'; sheet.style.pointerEvents = 'auto'; } else { sheet.style.bottom = '0'; }
+            document.getElementById('itemModalSheet').classList.add('sheet-active');
 
             document.getElementById('editId').value = id || "";
             const routeBtn = document.getElementById('routeBtn');
             const btnSave = document.getElementById('btnSave');
             window.updateMapPreview('');
 
-            // 權限：管理員全開，一般人只能開自己建立的或新增
             if(id && !isEditor) {
                 const item = currentData.find(x => x.id === id);
-                // 這裡暫時放寬，讓大家都能點進去看詳情，但不能存檔
                 if(item) btnSave.style.display = 'none'; 
             } else {
                 btnSave.style.display = 'block';
@@ -516,20 +530,17 @@
             }
         }
 
-        // V16.0: 獨立記帳視窗
         window.openAccountModal = (id) => {
             const item = currentData.find(x => x.id === id);
             if(!item) return;
 
             document.body.classList.add('modal-active');
             document.getElementById('modalOverlay').style.display = 'block';
-            const sheet = document.getElementById('accountModalSheet');
-            if(window.innerWidth >= 769) { sheet.style.opacity = '1'; sheet.style.pointerEvents = 'auto'; } else { sheet.style.bottom = '0'; }
+            document.getElementById('accountModalSheet').classList.add('sheet-active');
 
             document.getElementById('accountId').value = id;
             document.getElementById('accountTitle').innerText = item.location;
             
-            // 填入家庭選單
             const creatorSel = document.getElementById('creatorSelect');
             creatorSel.innerHTML = '<option value="">請選擇...</option>';
             if(tripData.groups) {
@@ -539,7 +550,6 @@
             }
             creatorSel.value = item.createdBy || "";
 
-            // 填入分帳列表
             const splitList = document.getElementById('familySplitList');
             splitList.innerHTML = '';
             if(tripData.groups) {
@@ -564,7 +574,6 @@
 
         window.onCreatorChange = () => {
             const who = document.getElementById('creatorSelect').value;
-            // 如果數量全空，自動幫自己填 1
             let allEmpty = true;
             document.querySelectorAll('.split-input').forEach(i => { if(i.value) allEmpty = false; });
             
