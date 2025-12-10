@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V14.0 (家庭協作版)</title>
+    <title>旅伴 Go! V14.1 (登入修復版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -55,7 +55,7 @@
         .badge { font-size: 0.8em; padding: 3px 8px; border-radius: 6px; background: #f5f5f5; color: #666; display: flex; align-items: center; gap: 4px; }
         .badge.stay { background: #e0f2f1; color: #00695c; }
         .badge.cost { background: #fff8e1; color: #f57f17; border: 1px solid #ffe0b2; }
-        .badge.creator { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; } /* 顯示誰新增的 */
+        .badge.creator { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
         
         .actions-col { width: 45px; border-left: 1px solid #f0f0f0; display: flex; flex-direction: column; }
         .act-btn { flex: 1; border: none; background: white; color: #ccc; font-size: 1.1em; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
@@ -89,7 +89,7 @@
         .btn-cancel { background: #f1f3f4; color: #333; margin-top: 10px; }
         .btn-map { background: #e8f0fe; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
 
-        /* 分帳功能區塊 */
+        /* 分帳功能 */
         .split-bill-box { background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2; margin-bottom: 15px; }
         .split-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
         .split-row:last-child { border-bottom: none; margin-bottom: 0; }
@@ -106,6 +106,9 @@
         .landing-form { display: none; width: 100%; max-width: 300px; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .landing-input { width: 100%; padding: 15px; font-size: 18px; text-align: center; border: 2px solid #eee; border-radius: 12px; margin-bottom: 15px; }
+        
+        /* 救命重置按鈕 */
+        .reset-btn { position: absolute; top: 20px; left: 20px; color: #ccc; cursor: pointer; font-size: 0.8em; border: 1px solid #eee; padding: 5px 10px; border-radius: 5px; }
 
         @media (min-width: 769px) {
             .app-container { flex-direction: row; }
@@ -119,6 +122,7 @@
 <body>
 
     <div id="landing">
+        <div class="reset-btn" onclick="logout()">重置</div>
         <h1 style="color:var(--primary); font-size: 2.5em; margin-bottom: 10px;">旅伴 Go!</h1>
         <p style="color:#888; margin-bottom: 40px;">請先選擇身分</p>
         
@@ -130,8 +134,7 @@
 
         <div id="landingStep2" class="landing-form">
             <h3 style="margin:0 0 15px 0;">請問您是？</h3>
-            <select id="familySelect" class="landing-input">
-                </select>
+            <select id="familySelect" class="landing-input"></select>
             <input type="password" id="passEnter" class="landing-input" placeholder="管理員密碼 (一般成員免填)">
             <button class="btn-full btn-primary" onclick="loginWithFamily()">進入行程</button>
             <button class="btn-full btn-cancel" onclick="backToStep1()">返回</button>
@@ -204,7 +207,6 @@
                 <div class="col" style="flex:1;"><input type="number" id="travelTimeInput" placeholder="分"></div>
             </div>
         </div>
-        
         <div class="split-bill-box">
             <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                 <label style="margin:0;"><i class="fas fa-coins"></i> 記帳 (選填)</label>
@@ -215,9 +217,7 @@
             </div>
             <div id="familySplitList"></div>
         </div>
-
         <div class="form-group"><label>備註</label><input type="text" id="noteInput" placeholder="備註..."></div>
-        
         <button id="btnSave" class="btn-full btn-primary" onclick="saveItem()">儲存</button>
         <button class="btn-full btn-cancel" onclick="closeAllModals()">取消/關閉</button>
     </div>
@@ -247,7 +247,7 @@
         const db = getFirestore(app);
         
         let currentTripId = localStorage.getItem('lastTripId');
-        let currentFamily = localStorage.getItem('lastFamily'); // 儲存身分
+        let currentFamily = localStorage.getItem('lastFamily');
         let currentPass = localStorage.getItem('lastTripPass');
         
         let currentDay = 1;
@@ -256,13 +256,14 @@
         let tripData = null;
         let isEditor = false;
 
-        // V14.0: 登入邏輯重構
-        if(currentTripId && currentFamily) {
-            // 自動登入
+        // V14.1 核心：自動登入邏輯重寫
+        if(currentTripId) {
             document.getElementById('codeEnter').value = currentTripId;
-            document.getElementById('landingStep1').style.display = 'none';
-            // 直接檢查並進入
-            checkTripCode(true); 
+            // 如果有完整的登入資料 (代碼 + 家庭)，直接嘗試靜默登入
+            if(currentFamily) {
+                document.getElementById('landingStep1').style.display = 'none'; // 隱藏第一步
+                checkTripCode(true); 
+            }
         }
 
         window.showCreate = () => {
@@ -275,7 +276,7 @@
             document.getElementById('landingCreate').style.display = 'none';
         }
 
-        // 步驟一：檢查代碼
+        // 步驟一：檢查代碼 (V14.1: 修復 isAuto 判斷)
         window.checkTripCode = async (isAuto = false) => {
             const code = document.getElementById('codeEnter').value.trim();
             if(!code) return alert("請輸入代碼");
@@ -286,25 +287,29 @@
                     tripData = snap.data();
                     currentTripId = code;
                     
-                    if(isAuto) {
-                        // 自動登入流程
+                    if(isAuto && currentFamily) {
+                        // 自動登入：驗證並進入
                         verifyAndEnter(currentPass);
                     } else {
-                        // 手動登入：顯示家庭選單
+                        // 手動登入：一定要顯示 Step 2 讓使用者選家庭
                         document.getElementById('landingStep1').style.display = 'none';
                         document.getElementById('landingStep2').style.display = 'block';
                         
+                        // 填入家庭選項
                         const sel = document.getElementById('familySelect');
                         sel.innerHTML = '<option value="">請選擇您的身分...</option>';
                         if(tripData.groups) {
                             tripData.groups.forEach(g => {
                                 sel.innerHTML += `<option value="${g}">${g}</option>`;
                             });
+                        } else {
+                            // 萬一沒有家庭資料 (舊版建立的)，提供預設選項
+                            sel.innerHTML += `<option value="訪客">訪客</option>`;
                         }
                     }
                 } else {
                     alert("找不到代碼");
-                    if(isAuto) { localStorage.clear(); location.reload(); }
+                    if(isAuto) logout(); // 清除無效資料
                 }
             } catch(e) {
                 console.error(e);
@@ -328,11 +333,14 @@
         function verifyAndEnter(pass) {
             // 驗證密碼決定權限
             if (pass && tripData.password && pass === tripData.password) {
-                isEditor = true; // 管理員
+                isEditor = true;
                 localStorage.setItem('lastTripPass', pass);
             } else {
-                isEditor = false; // 一般成員
-                if(pass) alert("密碼錯誤，您將以「一般成員」身分進入");
+                isEditor = false;
+                // 如果是手動輸入密碼且錯了，才提示
+                if(pass && document.getElementById('landingStep2').style.display === 'block') {
+                    alert("密碼錯誤，將以「一般成員」身分進入");
+                }
                 localStorage.removeItem('lastTripPass');
             }
             initApp();
@@ -354,7 +362,6 @@
                 const newTrip = { name, password: pass, startDate: date, days: parseInt(days), groups, createdAt: serverTimestamp() };
                 await setDoc(doc(db, "trips", id), newTrip);
                 
-                // 建立者自動是第一個家庭且是管理員
                 currentTripId = id; currentFamily = groups[0]; isEditor = true; tripData = newTrip;
                 localStorage.setItem('lastTripId', id); localStorage.setItem('lastFamily', currentFamily); localStorage.setItem('lastTripPass', pass);
                 initApp();
@@ -379,7 +386,6 @@
             mBadge.innerText = badgeText; mBadge.className = badgeClass;
             pcBadge.innerText = badgeText; pcBadge.className = badgeClass;
 
-            // 一般成員也能看到新增按鈕 (V14.0 改動)
             document.getElementById('fabBtn').style.display = "flex";
 
             renderDayNav(tripData.days);
@@ -481,17 +487,16 @@
                     const stayHtml = item.duration ? `<span class="badge stay"><i class="far fa-clock"></i> 停 ${formatDuration(item.duration)}</span>` : '';
                     const noteHtml = item.note ? `<span class="badge note"><i class="far fa-sticky-note"></i> ${item.note}</span>` : '';
                     let costHtml = item.totalCost > 0 ? `<span class="badge cost"><i class="fas fa-coins"></i> 總計 $${item.totalCost.toLocaleString()}</span>` : '';
-                    
-                    // V14.0: 顯示新增者
                     const creatorHtml = item.createdBy ? `<span class="badge creator"><i class="fas fa-user"></i> ${item.createdBy}</span>` : '';
 
-                    // V14.0: 按鈕顯示邏輯 (管理員可全改，一般人不能改)
                     let actionButtons = '';
                     if(isEditor) {
                         actionButtons = `<div class="actions-col"><button class="act-btn" onclick="openItemModal('${item.id}')"><i class="fas fa-pen"></i></button><button class="act-btn del" onclick="delItem('${item.id}')"><i class="fas fa-trash"></i></button></div>`;
                     } else {
-                        // 一般成員只能看，不能改 (按鈕隱藏)
-                        // 若希望一般成員能改「自己建的」，可在此加判斷: if(item.createdBy === currentFamily) ...
+                        // V14.1: 如果是該筆資料的建立者，允許編輯刪除
+                        if(item.createdBy === currentFamily) {
+                            actionButtons = `<div class="actions-col"><button class="act-btn" onclick="openItemModal('${item.id}')"><i class="fas fa-pen"></i></button><button class="act-btn del" onclick="delItem('${item.id}')"><i class="fas fa-trash"></i></button></div>`;
+                        }
                     }
 
                     listDiv.innerHTML += `
@@ -518,8 +523,11 @@
         }
 
         window.openItemModal = (id = null) => {
-            // V14.0: 任何人都能打開新增，但只有管理員能打開編輯
-            if(id && !isEditor) return; 
+            // V14.1 權限檢查: 管理員可開所有，一般人只能開自己建的或新增
+            if(id) {
+                const item = currentData.find(x => x.id === id);
+                if(!isEditor && item.createdBy !== currentFamily) return alert("您只能修改自己建立的行程");
+            }
 
             document.body.classList.add('modal-active');
             document.getElementById('modalOverlay').style.display = 'block';
@@ -531,21 +539,21 @@
             const btnSave = document.getElementById('btnSave');
             window.updateMapPreview('');
 
-            // V14.0: 權限控制按鈕
-            if(id && !isEditor) {
-                btnSave.style.display = 'none'; // 唯讀模式不顯示儲存
+            // V14.1 權限按鈕控制 (雙重保險)
+            if(id) {
+                const item = currentData.find(x => x.id === id);
+                if(!isEditor && item.createdBy !== currentFamily) btnSave.style.display = 'none';
+                else btnSave.style.display = 'block';
             } else {
                 btnSave.style.display = 'block';
             }
 
-            // 生成家庭列表
+            // 家庭列表
             const splitList = document.getElementById('familySplitList');
             splitList.innerHTML = '';
             if(tripData.groups) {
                 tripData.groups.forEach(family => {
-                    // 智慧預填：如果是自己，且是新增模式，預設填 1
                     let defaultQty = (!id && family === currentFamily) ? 1 : "";
-                    
                     splitList.innerHTML += `
                         <div class="split-row">
                             <span class="split-name">${family}</span>
@@ -575,7 +583,7 @@
             } else {
                 ['locInput','timeInput','durationInput','noteInput','travelTimeInput','unitPriceInput'].forEach(i => document.getElementById(i).value = '');
                 document.getElementById('transportInput').value = "無";
-                calcTotal(); // 觸發預設計算
+                calcTotal();
                 if(currentData.length > 0) {
                     routeBtn.style.display = 'flex';
                     window.lastLoc = currentData[currentData.length - 1].location;
@@ -598,6 +606,12 @@
 
         window.saveItem = async () => {
             const id = document.getElementById('editId').value;
+            // V14.1 儲存權限檢查
+            if(id) {
+                const item = currentData.find(x => x.id === id);
+                if(!isEditor && item.createdBy !== currentFamily) return alert("權限不足");
+            }
+
             const unitPrice = parseFloat(document.getElementById('unitPriceInput').value) || 0;
             let splitData = {}; let totalCost = 0;
             
@@ -617,26 +631,26 @@
                 travelDuration: document.getElementById('travelTimeInput').value,
                 note: document.getElementById('noteInput').value,
                 unitPrice, splitData, totalCost,
-                createdBy: currentFamily // V14.0: 紀錄是誰新增的
+                createdBy: id ? currentData.find(x => x.id === id).createdBy : currentFamily // 保留原始建立者或設為當前用戶
             };
             if(!data.location) return alert("地點必填");
             
             try { 
-                if(id) {
-                    if(!isEditor) return alert("權限不足，無法修改");
-                    await updateDoc(doc(db, "items", id), data);
-                } else {
-                    await addDoc(collection(db, "items"), { ...data, createdAt: serverTimestamp() });
-                }
+                if(id) await updateDoc(doc(db, "items", id), data);
+                else await addDoc(collection(db, "items"), { ...data, createdAt: serverTimestamp() });
                 closeAllModals(); 
             } catch(e) { alert("儲存失敗: " + e.message); }
         }
 
-        window.delItem = async (id) => { if(!isEditor) return; if(confirm("確定刪除？")) await deleteDoc(doc(db, "items", id)); }
+        window.delItem = async (id) => { 
+            const item = currentData.find(x => x.id === id);
+            if(!isEditor && item.createdBy !== currentFamily) return alert("權限不足");
+            if(confirm("確定刪除？")) await deleteDoc(doc(db, "items", id)); 
+        }
         window.logout = () => { localStorage.clear(); location.reload(); }
         window.copyCode = () => { navigator.clipboard.writeText(currentTripId).then(()=>alert("代碼已複製")); }
         
-        window.changeDay = changeDay; window.openItemModal = openItemModal; window.closeAllModals = closeAllModals; window.saveItem = saveItem; window.delItem = delItem; window.openGoogleMapsRoute = openGoogleMapsRoute; window.loadByCode = loadByCode; window.showCreate = showCreate; window.backToStep1 = backToStep1; window.loginWithFamily = loginWithFamily; window.checkTripCode = checkTripCode; window.createNewTrip = createNewTrip; window.logout = logout; window.copyCode = copyCode; window.updateMapPreview = updateMapPreview; window.calcTotal = calcTotal; window.showMoneyModal = showMoneyModal;
+        window.changeDay = changeDay; window.openItemModal = openItemModal; window.closeAllModals = closeAllModals; window.saveItem = saveItem; window.delItem = delItem; window.openGoogleMapsRoute = openGoogleMapsRoute; window.loadByCode = loadByCode; window.showLandingForm = showLandingForm; window.resetLanding = resetLanding; window.createNewTrip = createNewTrip; window.logout = logout; window.copyCode = copyCode; window.updateMapPreview = updateMapPreview; window.calcTotal = calcTotal; window.showMoneyModal = showMoneyModal; window.checkTripCode = checkTripCode; window.loginWithFamily = loginWithFamily; window.showCreate = showCreate; window.backToStep1 = backToStep1;
     </script>
 </body>
 </html>
