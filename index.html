@@ -3,97 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V7.2 (終極修復版)</title>
+    <title>旅伴 Go! V7.3 (強力容錯版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF6B6B;
-            --primary-dark: #EE5253;
-            --secondary: #F7F9FC;
-            --text-dark: #2D3436;
-            --text-gray: #636E72;
+            --primary: #FF6B6B; --primary-dark: #EE5253; --secondary: #F7F9FC;
+            --text-dark: #2D3436; --text-gray: #636E72;
             --bg-gradient: linear-gradient(135deg, #FF6B6B 0%, #FF9F43 100%);
             --shadow-float: 0 8px 15px rgba(255, 107, 107, 0.4);
         }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: var(--secondary);
-            margin: 0; display: flex; height: 100vh; overflow: hidden; color: var(--text-dark);
-            -webkit-user-select: none; user-select: none;
-        }
-
-        /* 按鈕元件 */
-        .big-btn {
-            padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;
-            background: var(--primary); color: white; transition: 0.2s; width: 100%;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
+        body { font-family: 'Noto Sans TC', sans-serif; background: var(--secondary); margin: 0; display: flex; height: 100vh; overflow: hidden; color: var(--text-dark); user-select: none; }
+        .big-btn { padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; background: var(--primary); color: white; transition: 0.2s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .big-btn.outline { background: white; border: 2px solid var(--primary); color: var(--primary); }
-        .big-btn.route { background: #2ecc71; border:none; color:white; font-size:0.9em; padding:10px; margin-bottom:15px; }
-
-        input, select {
-            width: 100%; padding: 12px; margin: 5px 0 15px 0;
-            border: 2px solid #DFE6E9; border-radius: 10px; box-sizing: border-box;
-            font-size: 16px; background: #fff; appearance: none;
-        }
-        
-        /* 頁面切換 */
-        #landing-page {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-gradient);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 200; transition: transform 0.4s ease;
-        }
-        .landing-card {
-            background: white; padding: 40px 30px; border-radius: 24px;
-            text-align: center; width: 85%; max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-
+        .big-btn.route { background: #2ecc71; color: white; font-size: 0.9em; margin-bottom: 10px; }
+        input, select { width: 100%; padding: 12px; margin: 5px 0 15px 0; border: 2px solid #DFE6E9; border-radius: 10px; box-sizing: border-box; font-size: 16px; background: #fff; appearance: none; }
+        #landing-page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-gradient); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; transition: transform 0.4s ease; }
+        .landing-card { background: white; padding: 40px 30px; border-radius: 24px; text-align: center; width: 85%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
         #planner-page { display: none; width: 100%; height: 100%; position: relative; }
-        
-        /* 側邊欄 */
-        .sidebar {
-            width: 260px; background: white; height: 100%;
-            display: flex; flex-direction: column;
-            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
-            position: absolute; left: -280px; top: 0; z-index: 50;
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .sidebar { width: 260px; background: white; height: 100%; display: flex; flex-direction: column; box-shadow: 2px 0 15px rgba(0,0,0,0.05); position: absolute; left: -280px; top: 0; z-index: 50; transition: left 0.3s; }
         .sidebar.open { left: 0; }
         .sidebar-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 40; }
         .sidebar-overlay.show { display: block; }
-        
         .day-list { list-style: none; padding: 15px; margin: 0; flex: 1; overflow-y: auto; }
-        .day-item {
-            padding: 14px 20px; cursor: pointer; border-radius: 12px; margin-bottom: 8px; color: var(--text-gray);
-        }
+        .day-item { padding: 14px 20px; cursor: pointer; border-radius: 12px; margin-bottom: 8px; color: var(--text-gray); }
         .day-item.active { background: #FFEAA7; color: #D35400; font-weight: bold; }
-
-        /* 除錯訊息區 (V7.2 新增) */
-        .debug-info {
-            padding: 10px; font-size: 0.75em; color: #d63031; background: #ffeaa7; 
-            word-break: break-all; text-align: center; border-top: 1px solid #fdcb6e;
-        }
-
-        /* 內容區 */
+        .debug-info { padding: 10px; font-size: 0.75em; color: #d63031; background: #ffeaa7; word-break: break-all; text-align: center; border-top: 1px solid #fdcb6e; }
         .main-content { flex: 1; padding: 0; display: flex; flex-direction: column; width: 100%; background: #F7F9FC; }
-        .top-nav {
-            background: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 30;
-        }
-        
+        .top-nav { background: white; padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 30; }
         #itinerary-list { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px; }
-
-        /* 行程卡片 */
-        .spot-card {
-            background: white; padding: 0; margin-bottom: 15px; border-radius: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; overflow: hidden; position: relative;
-            touch-action: none; border: 1px solid white;
-        }
+        .spot-card { background: white; padding: 0; margin-bottom: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; overflow: hidden; position: relative; touch-action: none; border: 1px solid white; }
         .sortable-ghost { opacity: 0.4; background: #ffeaa7; }
         .drag-handle { width: 40px; background: #fff; display: flex; align-items: center; justify-content: center; color: #b2bec3; cursor: grab; border-right: 1px solid #f1f2f6; }
         .info-col { flex: 1; padding: 15px; }
@@ -102,35 +42,16 @@
         .spot-time { font-size: 0.9em; color: var(--primary); background: #FFF0F0; padding: 2px 8px; border-radius: 6px; }
         .spot-meta { font-size: 0.85em; color: var(--text-gray); display: flex; gap: 8px; flex-wrap: wrap; margin-top: 5px;}
         .badge { background: #f1f2f6; padding: 3px 10px; border-radius: 20px; }
-        
         .card-actions { display: flex; flex-direction: column; border-left: 1px solid #f1f2f6; }
         .icon-btn { width: 44px; height: 100%; border:none; background:white; cursor:pointer; color:#b2bec3; font-size: 16px; display: flex; align-items: center; justify-content: center; }
-
-        .fab-btn {
-            position: absolute; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%;
-            background: var(--bg-gradient); color: white; border: none; font-size: 28px;
-            box-shadow: var(--shadow-float); cursor: pointer; z-index: 30;
-            display: flex; align-items: center; justify-content: center;
-        }
-
+        .fab-btn { position: absolute; bottom: 30px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--bg-gradient); color: white; border: none; font-size: 28px; box-shadow: var(--shadow-float); cursor: pointer; z-index: 30; display: flex; align-items: center; justify-content: center; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: flex-end; }
-        .modal-content {
-            background: white; padding: 25px; border-radius: 24px 24px 0 0;
-            width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto;
-            animation: slideUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
+        .modal-content { background: white; padding: 25px; border-radius: 24px 24px 0 0; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
         #mapPreview { width: 100%; height: 140px; background: #dfe6e9; border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
         #toast { visibility: hidden; background-color: #2d3436; color: #fff; text-align: center; border-radius: 50px; padding: 12px 24px; position: fixed; z-index: 200; left: 50%; bottom: 40px; transform: translateX(-50%); opacity: 0; transition: 0.3s; }
         #toast.show { visibility: visible; opacity: 1; bottom: 60px; }
-
-        @media (min-width: 769px) {
-            .sidebar { position: relative; left: 0; box-shadow: none; border-right: 1px solid #dfe6e9; }
-            .sidebar-overlay { display: none !important; }
-            .modal { align-items: center; }
-            .modal-content { border-radius: 20px; width: 450px; }
-        }
+        @media (min-width: 769px) { .sidebar { position: relative; left: 0; box-shadow: none; border-right: 1px solid #dfe6e9; } .sidebar-overlay { display: none !important; } .modal { align-items: center; } .modal-content { border-radius: 20px; width: 450px; } }
     </style>
 </head>
 <body>
@@ -139,23 +60,21 @@
 
     <div id="landing-page">
         <div class="landing-card" id="step-1">
-            <h1 style="color:var(--primary); margin-top:0;">旅伴 Go! <span style="font-size:0.5em; color:#999;">V7.2 修復版</span></h1>
+            <h1 style="color:var(--primary); margin-top:0;">旅伴 Go! <span style="font-size:0.5em; color:#999;">V7.3</span></h1>
             <div style="display:flex; flex-direction:column; gap:15px; margin-top:30px;">
                 <button class="big-btn" onclick="showStep('step-create')"><i class="fas fa-plus"></i> 新增行程</button>
                 <button class="big-btn outline" onclick="showStep('step-join')"><i class="fas fa-cloud-download-alt"></i> 載入行程</button>
             </div>
             <p id="autoLoadMsg" style="font-size:0.8em; color:#999; margin-top:20px; min-height:20px;"></p>
         </div>
-        
         <div class="landing-card" id="step-create" style="display:none;">
             <h3>建立新旅程</h3>
-            <input type="text" id="newTripName" placeholder="旅程名稱 (如：京阪神)">
+            <input type="text" id="newTripName" placeholder="旅程名稱">
             <input type="date" id="newTripDate">
             <input type="number" id="newTripDays" placeholder="總天數">
             <button class="big-btn" onclick="createTrip()">開始規劃</button>
             <div style="margin-top:15px; color:#999; cursor:pointer;" onclick="showStep('step-1')">返回</div>
         </div>
-
         <div class="landing-card" id="step-join" style="display:none;">
             <h3>輸入代碼</h3>
             <input type="text" id="joinCode" placeholder="6位數代碼" style="text-align:center; font-size:24px; letter-spacing:5px;">
@@ -166,30 +85,25 @@
 
     <div id="planner-page">
         <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-
         <div class="sidebar" id="sidebar">
             <div style="padding:25px; background:var(--secondary);">
                 <h3 id="tripTitle" style="margin:0; color:var(--text-dark);">載入中...</h3>
-                <small id="tripCodeDisplay" style="color:var(--text-gray); cursor:pointer; display:block; margin-top:5px;" onclick="copyCode()">代碼: ----</small>
+                <small id="tripCodeDisplay" style="color:var(--text-gray); cursor:pointer; display:block; margin-top:5px;" onclick="copyCode()">代碼: ---- <i class="far fa-copy"></i></small>
             </div>
             <ul class="day-list" id="dayList"></ul>
-            
             <div class="debug-info" id="debugMsg">等待連線...</div>
-
             <div style="padding:15px;">
                 <button onclick="logout()" class="big-btn outline" style="font-size:0.9em; height:45px; border-color:#dfe6e9; color:#636E72;">
-                    <i class="fas fa-sign-out-alt"></i> 退出/切換
+                    <i class="fas fa-sign-out-alt"></i> 退出
                 </button>
             </div>
         </div>
-
         <div class="main-content">
             <div class="top-nav">
                 <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
                 <div style="font-weight:bold; color:var(--text-dark); font-size:1.1em;" id="currentDayTitle">Day 1</div>
                 <div style="width:30px;"></div>
             </div>
-
             <div id="itinerary-list"></div>
             <button class="fab-btn" onclick="openModal()"><i class="fas fa-plus"></i></button>
         </div>
@@ -199,17 +113,14 @@
         <div class="modal-content">
             <h3 style="margin:0 0 15px 0; color:var(--text-dark);" id="modalTitle">📍 新增行程</h3>
             <input type="hidden" id="editItemId">
-
             <div id="route-box" style="display:none;">
                 <button class="big-btn route" onclick="openGoogleMapsRoute()">
                     <i class="fas fa-directions"></i> 與上一站 (<span id="prev-loc"></span>) 的路線
                 </button>
             </div>
-
             <label>地點名稱</label>
             <input type="text" id="itemLoc" placeholder="例如：晴空塔" onblur="updateMapPreview(this.value)">
             <div id="mapPreview"></div>
-
             <div style="display:flex; gap:10px;">
                 <div style="flex:1;">
                     <label>時間</label>
@@ -220,7 +131,6 @@
                     <input type="number" id="itemDuration" placeholder="如: 60">
                 </div>
             </div>
-
             <label>交通方式</label>
             <select id="itemTransport">
                 <option value="無">請選擇...</option>
@@ -230,10 +140,8 @@
                 <option value="單車">🚲 單車</option>
                 <option value="其他">🛸 其他</option>
             </select>
-
             <label>備註</label>
             <input type="text" id="itemNote" placeholder="例如：門票、必吃美食...">
-
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button class="big-btn outline" onclick="closeModal()">取消</button>
                 <button class="big-btn" onclick="saveItem()">儲存</button>
@@ -258,14 +166,8 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        let currentTripId = null, currentDayIndex = 1, unsubscribe = null, currentDayItemsData = [], sortableInstance = null;
 
-        let currentTripId = null;
-        let currentDayIndex = 1;
-        let unsubscribe = null;
-        let currentDayItemsData = [];
-        let sortableInstance = null;
-
-        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             const savedTripId = localStorage.getItem('lastTripId');
             if(savedTripId) {
@@ -277,39 +179,17 @@
             }
         });
 
-        // UI Helpers
-        window.showStep = (id) => {
-            document.querySelectorAll('.landing-card').forEach(el => el.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
-        };
-
-        window.toggleSidebar = () => {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.querySelector('.sidebar-overlay').classList.toggle('show');
-        };
-
-        window.showToast = (msg) => {
-            const t = document.getElementById('toast');
-            t.innerHTML = `<i class="fas fa-check"></i> ${msg}`;
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 2000);
-        };
-
+        window.showStep = (id) => { document.querySelectorAll('.landing-card').forEach(el => el.style.display = 'none'); document.getElementById(id).style.display = 'block'; };
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.querySelector('.sidebar-overlay').classList.toggle('show'); };
+        window.showToast = (msg) => { const t = document.getElementById('toast'); t.innerHTML = `<i class="fas fa-check"></i> ${msg}`; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); };
         window.logout = () => { if(confirm("確定退出？")) { localStorage.removeItem('lastTripId'); location.reload(); } };
+        window.updateMapPreview = (loc) => { const mapDiv = document.getElementById('mapPreview'); if(!loc) { mapDiv.innerHTML = ''; return; } mapDiv.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0" src="https://www.google.com/maps?q=${encodeURIComponent(loc)}&output=embed"></iframe>`; };
 
-        window.updateMapPreview = (loc) => {
-            const mapDiv = document.getElementById('mapPreview');
-            if(!loc) { mapDiv.innerHTML = ''; return; }
-            mapDiv.innerHTML = `<iframe width="100%" height="100%" frameborder="0" style="border:0" src="https://www.google.com/maps?q=${encodeURIComponent(loc)}&output=embed"></iframe>`;
-        };
-
-        // Modal Logic
         window.openModal = (editId = null) => {
             const modal = document.getElementById('itemModal');
             const routeBox = document.getElementById('route-box');
             document.getElementById('editItemId').value = editId ? editId : "";
             updateMapPreview('');
-
             if (editId) {
                 document.getElementById('modalTitle').innerText = "✏️ 修改行程";
                 routeBox.style.display = 'none';
@@ -326,144 +206,121 @@
                 document.getElementById('modalTitle').innerText = "📍 新增行程";
                 ['itemLoc','itemTime','itemDuration','itemNote'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('itemTransport').value = '無';
-                
-                // 顯示上一站導航 (如果有)
                 if(currentDayItemsData.length > 0) {
                     const lastItem = currentDayItemsData[currentDayItemsData.length - 1];
                     routeBox.style.display = 'block';
                     document.getElementById('prev-loc').innerText = lastItem.location;
                     document.getElementById('prev-loc').dataset.loc = lastItem.location;
-                } else {
-                    routeBox.style.display = 'none';
-                }
+                } else { routeBox.style.display = 'none'; }
             }
             modal.style.display = 'flex';
         };
-
-        window.openGoogleMapsRoute = () => {
-            const prev = document.getElementById('prev-loc').dataset.loc;
-            const current = document.getElementById('itemLoc').value;
-            let url = `https://www.google.com/maps/dir/ItemA/ItemB{encodeURIComponent(prev)}`;
-            if(current) url += `/${encodeURIComponent(current)}`;
-            window.open(url, '_blank');
-        };
-
+        window.openGoogleMapsRoute = () => { const prev = document.getElementById('prev-loc').dataset.loc; const current = document.getElementById('itemLoc').value; let url = `https://www.google.com/maps?q=${encodeURIComponent(prev)}`; if(current) url += `/${encodeURIComponent(current)}`; window.open(url, '_blank'); };
         window.closeModal = () => document.getElementById('itemModal').style.display = 'none';
 
-        // 核心功能
         window.createTrip = async () => {
-            const name = document.getElementById('newTripName').value;
-            const days = document.getElementById('newTripDays').value;
+            const name = document.getElementById('newTripName').value; const days = document.getElementById('newTripDays').value;
             if(!name || !days) return alert("請填寫完整");
             const tripId = Math.floor(100000 + Math.random() * 900000).toString();
-            try {
-                const data = { name, days: parseInt(days), createdAt: serverTimestamp() };
-                await setDoc(doc(db, "trips", tripId), data);
-                localStorage.setItem('lastTripId', tripId);
-                loadTrip(tripId, data);
-            } catch(e) { alert("錯誤: " + e.message); }
+            try { const data = { name, days: parseInt(days), createdAt: serverTimestamp() }; await setDoc(doc(db, "trips", tripId), data); localStorage.setItem('lastTripId', tripId); loadTrip(tripId, data); } catch(e) { alert("錯誤: " + e.message); }
         };
-
-        window.joinTrip = async () => {
-            const code = document.getElementById('joinCode').value;
-            const snap = await getDoc(doc(db, "trips", code));
-            if(snap.exists()) { localStorage.setItem('lastTripId', code); loadTrip(code, snap.data()); }
-            else alert("找不到行程");
-        };
+        window.joinTrip = async () => { const code = document.getElementById('joinCode').value; const snap = await getDoc(doc(db, "trips", code)); if(snap.exists()) { localStorage.setItem('lastTripId', code); loadTrip(code, snap.data()); } else alert("找不到行程"); };
 
         function loadTrip(tripId, data) {
-            currentTripId = String(tripId); // 強制轉字串
-            document.getElementById('landing-page').style.display = 'none';
-            document.getElementById('planner-page').style.display = 'block';
-            document.getElementById('tripTitle').innerText = data.name;
-            document.getElementById('tripCodeDisplay').innerHTML = `代碼: ${tripId} <i class="far fa-copy"></i>`;
-
-            const list = document.getElementById('dayList');
-            list.innerHTML = '';
-            for(let i=1; i<=data.days; i++) {
-                let li = document.createElement('li');
-                li.className = 'day-item'; li.innerText = `Day ${i}`; li.id = `day-${i}`;
-                li.onclick = () => selectDay(i); list.appendChild(li);
-            }
+            currentTripId = String(tripId);
+            document.getElementById('landing-page').style.display = 'none'; document.getElementById('planner-page').style.display = 'block';
+            document.getElementById('tripTitle').innerText = data.name; document.getElementById('tripCodeDisplay').innerHTML = `代碼: ${tripId} <i class="far fa-copy"></i>`;
+            const list = document.getElementById('dayList'); list.innerHTML = '';
+            for(let i=1; i<=data.days; i++) { let li = document.createElement('li'); li.className = 'day-item'; li.innerText = `Day ${i}`; li.id = `day-${i}`; li.onclick = () => selectDay(i); list.appendChild(li); }
             selectDay(1);
         }
-
         function selectDay(day) {
-            currentDayIndex = parseInt(day);
-            document.querySelectorAll('.day-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`day-${day}`).classList.add('active');
-            document.getElementById('currentDayTitle').innerText = `Day ${day}`;
-            if(window.innerWidth < 768) {
-                document.getElementById('sidebar').classList.remove('open');
-                document.querySelector('.sidebar-overlay').classList.remove('show');
-            }
-            listenItems(); // 重新監聽
+            currentDayIndex = parseInt(day); document.querySelectorAll('.day-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`day-${day}`).classList.add('active'); document.getElementById('currentDayTitle').innerText = `Day ${day}`;
+            if(window.innerWidth < 768) { document.getElementById('sidebar').classList.remove('open'); document.querySelector('.sidebar-overlay').classList.remove('show'); }
+            listenItems();
         }
 
-        // V7.2 關鍵修正：只依照 TripID 抓取，再自行過濾 Day
+        // V7.3 關鍵修改：強制轉字串排序 + HTML 累積字串生成 (防止單筆資料錯誤導致白屏)
         function listenItems() {
             if(unsubscribe) unsubscribe();
-            
-            // 診斷訊息更新
             const debugEl = document.getElementById('debugMsg');
-            debugEl.innerText = `正在讀取 TripID: ${currentTripId}...`;
-
-            // 查詢：只查 TripID，排除其他條件以免索引錯誤
             const q = query(collection(db, "items"), where("tripId", "==", currentTripId));
             
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const div = document.getElementById('itinerary-list');
-                div.innerHTML = '';
                 currentDayItemsData = [];
-                let totalItemsCount = 0; // 統計總共有幾筆資料(包含別天的)
+                let totalItemsCount = 0;
 
                 snapshot.forEach(doc => {
-                    const data = doc.data();
                     totalItemsCount++;
-                    // 在這裡過濾天數 (寬鬆比對：1 == "1")
-                    if(data.day == currentDayIndex) {
-                        currentDayItemsData.push({ id: doc.id, ...data });
+                    const data = doc.data();
+                    if(data.day == currentDayIndex) currentDayItemsData.push({ id: doc.id, ...data });
+                });
+                
+                debugEl.innerText = `診斷: 總 ${totalItemsCount} 筆，D${currentDayIndex} 有 ${currentDayItemsData.length} 筆`;
+
+                try {
+                    // 安全排序 (防止 time 為 null 或 undefined 導致當機)
+                    currentDayItemsData.sort((a, b) => {
+                        const orderA = (a.orderIndex !== undefined) ? a.orderIndex : 9999;
+                        const orderB = (b.orderIndex !== undefined) ? b.orderIndex : 9999;
+                        if(orderA !== orderB) return orderA - orderB;
+                        // 強制轉 String 再比較
+                        return String(a.time || "23:59").localeCompare(String(b.time || "23:59"));
+                    });
+                } catch(e) { console.error("Sorting error:", e); }
+
+                if(currentDayItemsData.length === 0) {
+                     div.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:50px;"><i class="fas fa-hand-pointer" style="font-size:48px; opacity:0.3;"></i><p>目前沒有行程<br>點擊右下角 + 開始規劃</p></div>';
+                     return; // 沒資料直接結束，不跑下面的迴圈
+                }
+
+                // 累積 HTML 字串 (效能更好，且不會因為單筆 DOM 錯誤而中斷)
+                let htmlBuffer = "";
+
+                currentDayItemsData.forEach(item => {
+                    try {
+                        let endTimeStr = "";
+                        // 時間計算防呆
+                        if(item.time && item.duration) {
+                            try {
+                                const [h, m] = String(item.time).split(':').map(Number);
+                                const totalMin = h * 60 + m + parseInt(item.duration);
+                                const endH = Math.floor(totalMin / 60) % 24;
+                                const endM = totalMin % 60;
+                                endTimeStr = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+                            } catch(e) {}
+                        }
+
+                        htmlBuffer += `
+                            <div class="spot-card" data-id="${item.id}">
+                                <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
+                                <div class="info-col">
+                                    <div class="spot-header">
+                                        <div class="spot-title">${item.location || "未命名"} <span class="spot-time">${item.time || ""}</span></div>
+                                    </div>
+                                    <div class="spot-meta">
+                                        ${item.duration ? `<span class="badge"><i class="far fa-clock"></i> ${item.duration}分</span>` : ''}
+                                        ${item.transport && item.transport !== '無' ? `<span class="badge"><i class="fas fa-bus"></i> ${item.transport}</span>` : ''}
+                                        ${item.note ? `<span>${item.note}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="icon-btn btn-edit" onclick="openModal('${item.id}')"><i class="fas fa-pen"></i></button>
+                                    <button class="icon-btn btn-del" onclick="delItem('${item.id}')"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                            </div>
+                        `;
+                    } catch (err) {
+                        console.error("Render error for item:", item, err);
+                        htmlBuffer += `<div style="padding:10px; color:red; border:1px dashed red; margin-bottom:10px;">⚠️ 此行程資料損毀，建議刪除</div>`;
                     }
                 });
 
-                // 更新診斷訊息
-                debugEl.innerText = `診斷: 資料庫共 ${totalItemsCount} 筆，Day ${currentDayIndex} 有 ${currentDayItemsData.length} 筆`;
+                // 一次性寫入 DOM
+                div.innerHTML = htmlBuffer;
 
-                // 排序：拖曳順序 > 時間
-                currentDayItemsData.sort((a, b) => {
-                    const orderA = (a.orderIndex !== undefined) ? a.orderIndex : 9999;
-                    const orderB = (b.orderIndex !== undefined) ? b.orderIndex : 9999;
-                    if(orderA !== orderB) return orderA - orderB;
-                    return (a.time || "23:59").localeCompare(b.time || "23:59");
-                });
-
-                if(currentDayItemsData.length === 0) {
-                     div.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:50px;"><i class="fas fa-hand-pointer" style="font-size:48px; opacity:0.3;"></i><p>點擊右下角 + 開始規劃<br>長按行程可拖曳排序</p></div>';
-                }
-
-                currentDayItemsData.forEach(item => {
-                    div.innerHTML += `
-                        <div class="spot-card" data-id="${item.id}">
-                            <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
-                            <div class="info-col">
-                                <div class="spot-header">
-                                    <div class="spot-title">${item.location || "未命名"} <span class="spot-time">${item.time || ""}</span></div>
-                                </div>
-                                <div class="spot-meta">
-                                    ${item.duration ? `<span class="badge"><i class="far fa-clock"></i> ${item.duration}分</span>` : ''}
-                                    ${item.transport && item.transport !== '無' ? `<span class="badge"><i class="fas fa-bus"></i> ${item.transport}</span>` : ''}
-                                    ${item.note ? `<span>${item.note}</span>` : ''}
-                                </div>
-                            </div>
-                            <div class="card-actions">
-                                <button class="icon-btn btn-edit" onclick="openModal('${item.id}')"><i class="fas fa-pen"></i></button>
-                                <button class="icon-btn btn-del" onclick="delItem('${item.id}')"><i class="fas fa-trash-alt"></i></button>
-                            </div>
-                        </div>
-                    `;
-                });
-
-                // 啟用拖曳 Sortable
                 if(typeof Sortable !== 'undefined') {
                     if(sortableInstance) sortableInstance.destroy();
                     sortableInstance = new Sortable(div, {
@@ -475,49 +332,22 @@
         }
 
         async function saveNewOrder() {
-            const list = document.getElementById('itinerary-list');
-            const items = list.querySelectorAll('.spot-card');
-            const batch = writeBatch(db);
-            items.forEach((item, index) => {
-                const ref = doc(db, "items", item.dataset.id);
-                batch.update(ref, { orderIndex: index });
-            });
-            await batch.commit();
-            showToast("順序已更新");
+            const list = document.getElementById('itinerary-list'); const items = list.querySelectorAll('.spot-card'); const batch = writeBatch(db);
+            items.forEach((item, index) => { const ref = doc(db, "items", item.dataset.id); batch.update(ref, { orderIndex: index }); });
+            await batch.commit(); showToast("順序已更新");
         }
-
         window.saveItem = async () => {
-            const editId = document.getElementById('editItemId').value;
-            const loc = document.getElementById('itemLoc').value;
+            const editId = document.getElementById('editItemId').value; const loc = document.getElementById('itemLoc').value;
             if(!loc) return alert("請輸入地點");
-
-            const data = {
-                tripId: currentTripId, day: parseInt(currentDayIndex),
-                time: document.getElementById('itemTime').value,
-                location: loc,
-                duration: document.getElementById('itemDuration').value,
-                transport: document.getElementById('itemTransport').value,
-                note: document.getElementById('itemNote').value
-            };
-
-            try {
-                if (editId) {
-                    await updateDoc(doc(db, "items", editId), data);
-                    showToast("已更新");
-                } else {
-                    data.createdAt = serverTimestamp();
-                    data.orderIndex = currentDayItemsData.length;
-                    await addDoc(collection(db, "items"), data);
-                    showToast("已新增");
-                }
-                closeModal();
+            const data = { tripId: currentTripId, day: parseInt(currentDayIndex), time: document.getElementById('itemTime').value, location: loc, duration: document.getElementById('itemDuration').value, transport: document.getElementById('itemTransport').value, note: document.getElementById('itemNote').value };
+            try { 
+                if (editId) { await updateDoc(doc(db, "items", editId), data); showToast("已更新"); } 
+                else { data.createdAt = serverTimestamp(); data.orderIndex = currentDayItemsData.length; await addDoc(collection(db, "items"), data); showToast("已新增"); } 
+                closeModal(); 
             } catch(e) { alert("儲存失敗: " + e.message); }
         };
-
         window.delItem = async (id) => { if(confirm("確定刪除?")) { await deleteDoc(doc(db, "items", id)); showToast("已刪除"); } };
-        window.copyCode = () => { navigator.clipboard.writeText(currentTripId).then(()=>showToast("代碼已複製")); }
-        
-        // Expose to HTML
+        window.copyCode = () => { navigator.clipboard.writeText(currentTripId).then(()=>showToast("代碼已複製")); };
         window.openModal = openModal; window.saveItem = saveItem; window.delItem = delItem; window.openGoogleMapsRoute = openGoogleMapsRoute;
     </script>
 </body>
