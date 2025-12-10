@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V14.1 (登入修復版)</title>
+    <title>旅伴 Go! V14.2 (緊急修復版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -21,12 +21,10 @@
         .sidebar-btn.active { background: #e8f0fe; color: var(--primary); font-weight: bold; }
         .sidebar-date { float: right; font-size: 0.85em; color: #888; font-weight: normal; }
 
-        /* 財務報表 */
         .cost-summary { margin-top: auto; padding: 15px; background: #fff8e1; border-radius: 12px; font-size: 0.9em; border: 1px solid #ffe0b2; }
         .cost-row { display: flex; justify-content: space-between; margin-bottom: 5px; color: #5d4037; }
         .cost-row.total { border-top: 1px dashed #d7ccc8; margin-top: 5px; padding-top: 5px; font-weight: bold; color: #d84315; }
 
-        /* 手機導航 */
         .mobile-header { background: white; padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
         .header-left { display: flex; flex-direction: column; }
         .header-right { display: flex; align-items: center; gap: 10px; }
@@ -37,7 +35,6 @@
         .tool-icon.logout { color: #d93025; background: #ffebee; }
         .tool-icon.money { color: #f57f17; background: #fff8e1; }
 
-        /* 天數列 */
         .mobile-days-bar { display: flex; overflow-x: auto; background: white; padding: 10px 15px; border-bottom: 1px solid #eee; white-space: nowrap; gap: 10px; scrollbar-width: none; }
         .mobile-days-bar::-webkit-scrollbar { display: none; }
         .day-pill { display: inline-block; padding: 8px 16px; border-radius: 20px; background: #f1f3f4; color: #666; font-size: 0.9em; cursor: pointer; transition: 0.2s; flex-shrink: 0; text-align: center;}
@@ -46,7 +43,6 @@
 
         .main-content { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 120px; position: relative; }
 
-        /* 卡片 */
         .spot-card { background: var(--card-bg); border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 0; display: flex; overflow: hidden; border: 1px solid #f0f0f0; position: relative; z-index: 2; }
         .time-col { width: 75px; background: #e8f0fe; color: #1967d2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; font-weight: 700; font-size: 0.95em; text-align: center; border-right: 1px solid #dbeafe; }
         .info-col { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -62,7 +58,6 @@
         .act-btn:hover { background: #f5f5f5; color: var(--primary); }
         .act-btn.del:hover { color: #d32f2f; background: #ffebee; }
 
-        /* 交通 */
         .transport-connector { display: flex; align-items: center; justify-content: center; padding: 12px 0; position: relative; }
         .transport-connector::before { content: ''; position: absolute; top: 0; bottom: 0; left: 37px; width: 2px; background: repeating-linear-gradient(to bottom, #ddd 0, #ddd 6px, transparent 6px, transparent 12px); z-index: 0; }
         .transport-pill { background: white; border: 1px solid #eee; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; color: #666; position: relative; z-index: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; }
@@ -71,7 +66,6 @@
         .fab-btn { position: absolute; bottom: 25px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 4px 15px rgba(66,133,244,0.4); font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; z-index: 100; }
         .fab-btn:active { transform: scale(0.9); }
 
-        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; transition: opacity 0.3s; }
         .modal-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; padding: 25px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); max-height: 90vh; overflow-y: auto; }
         .modal-active .modal-overlay { display: block; opacity: 1; }
@@ -89,7 +83,6 @@
         .btn-cancel { background: #f1f3f4; color: #333; margin-top: 10px; }
         .btn-map { background: #e8f0fe; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;}
 
-        /* 分帳功能 */
         .split-bill-box { background: #fff8e1; padding: 15px; border-radius: 12px; border: 1px solid #ffe0b2; margin-bottom: 15px; }
         .split-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
         .split-row:last-child { border-bottom: none; margin-bottom: 0; }
@@ -100,15 +93,14 @@
         .role-editor { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
         .role-viewer { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
 
-        /* 歡迎頁 */
         #landing { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
         .landing-options { width: 100%; max-width: 300px; }
         .landing-form { display: none; width: 100%; max-width: 300px; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         .landing-input { width: 100%; padding: 15px; font-size: 18px; text-align: center; border: 2px solid #eee; border-radius: 12px; margin-bottom: 15px; }
         
-        /* 救命重置按鈕 */
-        .reset-btn { position: absolute; top: 20px; left: 20px; color: #ccc; cursor: pointer; font-size: 0.8em; border: 1px solid #eee; padding: 5px 10px; border-radius: 5px; }
+        /* V14.2: 強制置頂的紅色重置按鈕 */
+        .reset-btn { position: absolute; top: 20px; left: 20px; color: #d32f2f; background: #ffebee; border: 1px solid #ffcdd2; cursor: pointer; font-size: 0.9em; padding: 8px 12px; border-radius: 8px; z-index: 2001; font-weight: bold;}
 
         @media (min-width: 769px) {
             .app-container { flex-direction: row; }
@@ -122,14 +114,20 @@
 <body>
 
     <div id="landing">
-        <div class="reset-btn" onclick="logout()">重置</div>
+        <button class="reset-btn" onclick="globalLogout()">⚠️ 點我重置系統</button>
+
         <h1 style="color:var(--primary); font-size: 2.5em; margin-bottom: 10px;">旅伴 Go!</h1>
         <p style="color:#888; margin-bottom: 40px;">請先選擇身分</p>
         
-        <div id="landingStep1" class="landing-form" style="display:block;">
-            <input type="text" id="codeEnter" class="landing-input" placeholder="請輸入 6 碼行程代碼">
+        <div id="landingOptions" class="landing-options">
+            <button class="btn-full btn-primary" onclick="showLandingForm('login')">載入行程</button>
+            <button class="btn-full btn-cancel" onclick="showLandingForm('create')">建立新行程</button>
+        </div>
+
+        <div id="landingLogin" class="landing-form">
+            <input type="text" id="codeEnter" class="landing-input" placeholder="行程代碼 (6碼)">
             <button class="btn-full btn-primary" onclick="checkTripCode()">下一步</button>
-            <button class="btn-full btn-cancel" onclick="showCreate()">建立新行程</button>
+            <button class="btn-full btn-cancel" onclick="resetLanding()">返回</button>
         </div>
 
         <div id="landingStep2" class="landing-form">
@@ -168,7 +166,7 @@
             </div>
             <div id="pcDayList" class="day-list" style="flex:1;"></div>
             <div id="pcCostSummary" class="cost-summary"></div>
-            <button class="btn-full btn-cancel" style="margin-top:10px;" onclick="logout()">退出</button>
+            <button class="btn-full btn-cancel" style="margin-top:10px;" onclick="globalLogout()">退出</button>
         </div>
 
         <div style="flex:1; display:flex; flex-direction:column; height:100%;">
@@ -179,7 +177,7 @@
                 </div>
                 <div class="header-right">
                     <div class="tool-icon money" onclick="showMoneyModal()" title="帳本"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <div class="tool-icon logout" onclick="logout()" title="退出"><i class="fas fa-sign-out-alt"></i></div>
+                    <div class="tool-icon logout" onclick="globalLogout()" title="退出"><i class="fas fa-sign-out-alt"></i></div>
                 </div>
             </div>
 
@@ -246,6 +244,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
+        // V14.2: 將登出功能直接掛載到 window，確保一定能被呼叫
+        window.globalLogout = () => {
+            localStorage.clear();
+            location.reload();
+        }
+
         let currentTripId = localStorage.getItem('lastTripId');
         let currentFamily = localStorage.getItem('lastFamily');
         let currentPass = localStorage.getItem('lastTripPass');
@@ -256,14 +260,32 @@
         let tripData = null;
         let isEditor = false;
 
-        // V14.1 核心：自動登入邏輯重寫
+        // V14.2: 強制資料同步
+        // 如果有 ID 但沒有家庭 (卡在選擇身分)，重新抓取資料填入選單
         if(currentTripId) {
             document.getElementById('codeEnter').value = currentTripId;
-            // 如果有完整的登入資料 (代碼 + 家庭)，直接嘗試靜默登入
-            if(currentFamily) {
-                document.getElementById('landingStep1').style.display = 'none'; // 隱藏第一步
-                checkTripCode(true); 
-            }
+            // 嘗試抓取資料
+            getDoc(doc(db, "trips", currentTripId)).then(snap => {
+                if(snap.exists()) {
+                    tripData = snap.data();
+                    if(currentFamily) {
+                        // 有完整資料，自動登入
+                        document.getElementById('landingStep1').style.display = 'none';
+                        verifyAndEnter(currentPass);
+                    } else {
+                        // V14.2: 沒選家庭，強制進入 Step 2 並填入選單
+                        document.getElementById('landingStep1').style.display = 'none';
+                        document.getElementById('landingStep2').style.display = 'block';
+                        renderFamilySelect();
+                    }
+                } else {
+                    // 資料庫找不到，清除無效資料
+                    globalLogout();
+                }
+            }).catch(e => {
+                console.error(e);
+                alert("連線錯誤，請檢查網路或稍後再試");
+            });
         }
 
         window.showCreate = () => {
@@ -276,8 +298,7 @@
             document.getElementById('landingCreate').style.display = 'none';
         }
 
-        // 步驟一：檢查代碼 (V14.1: 修復 isAuto 判斷)
-        window.checkTripCode = async (isAuto = false) => {
+        window.checkTripCode = async () => {
             const code = document.getElementById('codeEnter').value.trim();
             if(!code) return alert("請輸入代碼");
 
@@ -286,38 +307,32 @@
                 if(snap.exists()) {
                     tripData = snap.data();
                     currentTripId = code;
-                    
-                    if(isAuto && currentFamily) {
-                        // 自動登入：驗證並進入
-                        verifyAndEnter(currentPass);
-                    } else {
-                        // 手動登入：一定要顯示 Step 2 讓使用者選家庭
-                        document.getElementById('landingStep1').style.display = 'none';
-                        document.getElementById('landingStep2').style.display = 'block';
-                        
-                        // 填入家庭選項
-                        const sel = document.getElementById('familySelect');
-                        sel.innerHTML = '<option value="">請選擇您的身分...</option>';
-                        if(tripData.groups) {
-                            tripData.groups.forEach(g => {
-                                sel.innerHTML += `<option value="${g}">${g}</option>`;
-                            });
-                        } else {
-                            // 萬一沒有家庭資料 (舊版建立的)，提供預設選項
-                            sel.innerHTML += `<option value="訪客">訪客</option>`;
-                        }
-                    }
+                    // 切換到 Step 2
+                    document.getElementById('landingStep1').style.display = 'none';
+                    document.getElementById('landingStep2').style.display = 'block';
+                    renderFamilySelect();
                 } else {
                     alert("找不到代碼");
-                    if(isAuto) logout(); // 清除無效資料
                 }
             } catch(e) {
                 console.error(e);
-                alert("連線錯誤，請稍後再試");
+                alert("連線錯誤");
             }
         }
 
-        // 步驟二：選擇身分並登入
+        // V14.2: 獨立渲染選單函式
+        function renderFamilySelect() {
+            const sel = document.getElementById('familySelect');
+            sel.innerHTML = '<option value="">請選擇您的身分...</option>';
+            if(tripData && tripData.groups) {
+                tripData.groups.forEach(g => {
+                    sel.innerHTML += `<option value="${g}">${g}</option>`;
+                });
+            } else {
+                sel.innerHTML += `<option value="訪客">訪客</option>`;
+            }
+        }
+
         window.loginWithFamily = () => {
             const family = document.getElementById('familySelect').value;
             const pass = document.getElementById('passEnter').value.trim();
@@ -326,26 +341,20 @@
             currentFamily = family;
             localStorage.setItem('lastTripId', currentTripId);
             localStorage.setItem('lastFamily', family);
-            
             verifyAndEnter(pass);
         }
 
         function verifyAndEnter(pass) {
-            // 驗證密碼決定權限
             if (pass && tripData.password && pass === tripData.password) {
-                isEditor = true;
-                localStorage.setItem('lastTripPass', pass);
+                isEditor = true; localStorage.setItem('lastTripPass', pass);
             } else {
-                isEditor = false;
-                // 如果是手動輸入密碼且錯了，才提示
-                if(pass && document.getElementById('landingStep2').style.display === 'block') {
-                    alert("密碼錯誤，將以「一般成員」身分進入");
-                }
-                localStorage.removeItem('lastTripPass');
+                isEditor = false; localStorage.removeItem('lastTripPass');
             }
             initApp();
         }
 
+        // ... (以下為標準 CRUD 功能，保持 V14.0 邏輯) ...
+        
         window.createNewTrip = async () => {
             const name = document.getElementById('newTripName').value;
             const pass = document.getElementById('newTripPass').value.trim();
@@ -361,7 +370,6 @@
             try {
                 const newTrip = { name, password: pass, startDate: date, days: parseInt(days), groups, createdAt: serverTimestamp() };
                 await setDoc(doc(db, "trips", id), newTrip);
-                
                 currentTripId = id; currentFamily = groups[0]; isEditor = true; tripData = newTrip;
                 localStorage.setItem('lastTripId', id); localStorage.setItem('lastFamily', currentFamily); localStorage.setItem('lastTripPass', pass);
                 initApp();
@@ -379,15 +387,12 @@
 
             const mBadge = document.getElementById('mobileRoleBadge');
             const pcBadge = document.getElementById('pcRoleBadge');
-            
             let badgeText = isEditor ? `${currentFamily} (管理員)` : `${currentFamily}`;
             let badgeClass = isEditor ? "role-badge role-editor" : "role-badge role-viewer";
-            
             mBadge.innerText = badgeText; mBadge.className = badgeClass;
             pcBadge.innerText = badgeText; pcBadge.className = badgeClass;
 
             document.getElementById('fabBtn').style.display = "flex";
-
             renderDayNav(tripData.days);
             changeDay(1);
             listenAllCosts(); 
@@ -398,7 +403,6 @@
             onSnapshot(q, (snapshot) => {
                 let summary = {}; let grandTotal = 0;
                 if(tripData.groups) tripData.groups.forEach(g => summary[g] = 0);
-
                 snapshot.forEach(doc => {
                     const item = doc.data();
                     if(item.splitData) {
@@ -409,7 +413,6 @@
                         }
                     }
                 });
-
                 let html = "";
                 for(let family in summary) html += `<div class="cost-row"><span class="split-name">${family}</span><span>$${summary[family].toLocaleString()}</span></div>`;
                 html += `<div class="cost-row total"><span>總支出</span><span>$${grandTotal.toLocaleString()}</span></div>`;
@@ -493,7 +496,6 @@
                     if(isEditor) {
                         actionButtons = `<div class="actions-col"><button class="act-btn" onclick="openItemModal('${item.id}')"><i class="fas fa-pen"></i></button><button class="act-btn del" onclick="delItem('${item.id}')"><i class="fas fa-trash"></i></button></div>`;
                     } else {
-                        // V14.1: 如果是該筆資料的建立者，允許編輯刪除
                         if(item.createdBy === currentFamily) {
                             actionButtons = `<div class="actions-col"><button class="act-btn" onclick="openItemModal('${item.id}')"><i class="fas fa-pen"></i></button><button class="act-btn del" onclick="delItem('${item.id}')"><i class="fas fa-trash"></i></button></div>`;
                         }
@@ -523,10 +525,9 @@
         }
 
         window.openItemModal = (id = null) => {
-            // V14.1 權限檢查: 管理員可開所有，一般人只能開自己建的或新增
-            if(id) {
+            if(id && !isEditor) {
                 const item = currentData.find(x => x.id === id);
-                if(!isEditor && item.createdBy !== currentFamily) return alert("您只能修改自己建立的行程");
+                if(item.createdBy !== currentFamily) return alert("權限不足");
             }
 
             document.body.classList.add('modal-active');
@@ -539,7 +540,6 @@
             const btnSave = document.getElementById('btnSave');
             window.updateMapPreview('');
 
-            // V14.1 權限按鈕控制 (雙重保險)
             if(id) {
                 const item = currentData.find(x => x.id === id);
                 if(!isEditor && item.createdBy !== currentFamily) btnSave.style.display = 'none';
@@ -606,15 +606,14 @@
 
         window.saveItem = async () => {
             const id = document.getElementById('editId').value;
-            // V14.1 儲存權限檢查
-            if(id) {
+            // 權限再次檢查
+            if(id && !isEditor) {
                 const item = currentData.find(x => x.id === id);
-                if(!isEditor && item.createdBy !== currentFamily) return alert("權限不足");
+                if(item.createdBy !== currentFamily) return alert("權限不足");
             }
 
             const unitPrice = parseFloat(document.getElementById('unitPriceInput').value) || 0;
             let splitData = {}; let totalCost = 0;
-            
             if(unitPrice > 0 && tripData.groups) {
                 tripData.groups.forEach(family => {
                     const qty = parseFloat(document.getElementById(`qty-${family}`).value) || 0;
@@ -631,7 +630,7 @@
                 travelDuration: document.getElementById('travelTimeInput').value,
                 note: document.getElementById('noteInput').value,
                 unitPrice, splitData, totalCost,
-                createdBy: id ? currentData.find(x => x.id === id).createdBy : currentFamily // 保留原始建立者或設為當前用戶
+                createdBy: id ? currentData.find(x => x.id === id).createdBy : currentFamily
             };
             if(!data.location) return alert("地點必填");
             
@@ -647,10 +646,9 @@
             if(!isEditor && item.createdBy !== currentFamily) return alert("權限不足");
             if(confirm("確定刪除？")) await deleteDoc(doc(db, "items", id)); 
         }
-        window.logout = () => { localStorage.clear(); location.reload(); }
         window.copyCode = () => { navigator.clipboard.writeText(currentTripId).then(()=>alert("代碼已複製")); }
         
-        window.changeDay = changeDay; window.openItemModal = openItemModal; window.closeAllModals = closeAllModals; window.saveItem = saveItem; window.delItem = delItem; window.openGoogleMapsRoute = openGoogleMapsRoute; window.loadByCode = loadByCode; window.showLandingForm = showLandingForm; window.resetLanding = resetLanding; window.createNewTrip = createNewTrip; window.logout = logout; window.copyCode = copyCode; window.updateMapPreview = updateMapPreview; window.calcTotal = calcTotal; window.showMoneyModal = showMoneyModal; window.checkTripCode = checkTripCode; window.loginWithFamily = loginWithFamily; window.showCreate = showCreate; window.backToStep1 = backToStep1;
+        window.changeDay = changeDay; window.openItemModal = openItemModal; window.closeAllModals = closeAllModals; window.saveItem = saveItem; window.delItem = delItem; window.openGoogleMapsRoute = openGoogleMapsRoute; window.loadByCode = loadByCode; window.showLandingForm = showLandingForm; window.resetLanding = resetLanding; window.createNewTrip = createNewTrip; window.copyCode = copyCode; window.updateMapPreview = updateMapPreview; window.calcTotal = calcTotal; window.showMoneyModal = showMoneyModal; window.checkTripCode = checkTripCode; window.loginWithFamily = loginWithFamily; window.showCreate = showCreate; window.backToStep1 = backToStep1;
     </script>
 </body>
 </html>
