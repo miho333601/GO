@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V7.5 (穩定美化版)</title>
+    <title>旅伴 Go! V7.6 (穩定回歸版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4285F4; /* Google Blue */
+            --primary: #4285F4;
             --secondary: #F8F9FA;
             --text-dark: #202124;
             --text-gray: #5F6368;
@@ -20,7 +19,12 @@
             font-family: 'Noto Sans TC', sans-serif;
             background: var(--secondary);
             margin: 0; display: flex; height: 100vh; overflow: hidden; color: var(--text-dark);
-            -webkit-user-select: none; user-select: none;
+        }
+
+        /* 診斷框 (V7.6 回歸) */
+        .debug-info {
+            padding: 10px; font-size: 0.8em; color: #856404; background: #fff3cd; 
+            border-top: 1px solid #ffeeba; text-align: center;
         }
 
         /* 按鈕元件 */
@@ -30,18 +34,15 @@
             display: flex; align-items: center; justify-content: center; gap: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
-        .big-btn:active { transform: scale(0.98); }
         .big-btn.outline { background: white; border: 1px solid #dadce0; color: var(--primary); box-shadow: none; }
-        .big-btn.route { background: #34A853; margin-bottom: 15px; } /* 綠色路線按鈕 */
+        .big-btn.route { background: #34A853; margin-bottom: 15px; } 
 
         input, select {
             width: 100%; padding: 12px; margin: 5px 0 15px 0;
             border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box;
             font-size: 16px; background: #fff; appearance: none;
         }
-        input:focus, select:focus { outline: none; border-color: var(--primary); border-width: 2px; margin: 4px 0 14px 0; }
-        label { font-size: 0.85em; color: var(--text-gray); font-weight: 500; }
-
+        
         /* 歡迎頁 */
         #landing-page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -88,12 +89,8 @@
         .spot-card {
             background: white; padding: 0; margin-bottom: 12px; border-radius: 8px;
             box-shadow: 0 1px 3px rgba(60,64,67,0.3); display: flex; overflow: hidden; position: relative;
-            touch-action: none; border: 1px solid transparent;
+            border: 1px solid transparent;
         }
-        /* 拖曳時的樣式 */
-        .sortable-ghost { opacity: 0.4; background: #e8f0fe; border: 1px dashed var(--primary); }
-        
-        .drag-handle { width: 30px; background: #fff; display: flex; align-items: center; justify-content: center; color: #dadce0; cursor: grab; border-right: 1px solid #f1f3f4; }
         
         .info-col { flex: 1; padding: 12px; display: flex; flex-direction: column; justify-content: center; }
         .spot-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
@@ -117,7 +114,6 @@
         }
         .fab-btn i { background: var(--bg-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 32px; }
 
-        /* 彈窗 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: flex-end; }
         .modal-content {
             background: white; padding: 25px; border-radius: 16px 16px 0 0;
@@ -145,7 +141,7 @@
 
     <div id="landing-page">
         <div class="landing-card" id="step-1">
-            <h1 style="color:var(--primary); margin-top:0;">旅伴 Go! <span style="font-size:0.5em; color:#999;">V7.5</span></h1>
+            <h1 style="color:var(--primary); margin-top:0;">旅伴 Go! <span style="font-size:0.5em; color:#999;">V7.6</span></h1>
             <div style="display:flex; flex-direction:column; gap:15px; margin-top:30px;">
                 <button class="big-btn" onclick="showStep('step-create')"><i class="fas fa-plus"></i> 新增行程</button>
                 <button class="big-btn outline" onclick="showStep('step-join')"><i class="fas fa-cloud-download-alt"></i> 載入行程</button>
@@ -179,6 +175,9 @@
                 <small id="tripCodeDisplay" style="color:var(--text-gray); cursor:pointer; display:block; margin-top:5px;" onclick="copyCode()">代碼: ---- <i class="far fa-copy"></i></small>
             </div>
             <ul class="day-list" id="dayList"></ul>
+            
+            <div class="debug-info" id="debugMsg">等待連線...</div>
+
             <div style="padding:15px;">
                 <button onclick="logout()" class="big-btn outline" style="font-size:0.9em; height:40px; color:#5f6368;">
                     <i class="fas fa-sign-out-alt"></i> 退出
@@ -268,8 +267,8 @@
         let currentDayIndex = 1;
         let unsubscribe = null;
         let currentDayItemsData = [];
-        let sortableInstance = null;
 
+        // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             const savedTripId = localStorage.getItem('lastTripId');
             if(savedTripId) {
@@ -281,7 +280,7 @@
             }
         });
 
-        // UI Helpers
+        // UI 相關函式
         window.showStep = (id) => {
             document.querySelectorAll('.landing-card').forEach(el => el.style.display = 'none');
             document.getElementById(id).style.display = 'block';
@@ -330,7 +329,6 @@
                 ['itemLoc','itemTime','itemDuration','itemNote'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('itemTransport').value = '無';
                 
-                // 智慧路線按鈕
                 if(currentDayItemsData.length > 0) {
                     const lastItem = currentDayItemsData[currentDayItemsData.length - 1];
                     routeBox.style.display = 'block';
@@ -353,7 +351,7 @@
 
         window.closeModal = () => document.getElementById('itemModal').style.display = 'none';
 
-        // 核心邏輯 (使用 V7.4 驗證過的穩固邏輯)
+        // 核心邏輯
         window.createTrip = async () => {
             const name = document.getElementById('newTripName').value;
             const days = document.getElementById('newTripDays').value;
@@ -403,27 +401,31 @@
             listenItems();
         }
 
-        // 核心顯示邏輯 (融合 V7.4 的穩定性 + V7.3 的美觀)
+        // 核心顯示邏輯 (V7.6：包含診斷 + 完整欄位顯示)
         function listenItems() {
             if(unsubscribe) unsubscribe();
+            const debugEl = document.getElementById('debugMsg');
+            debugEl.innerText = `連線中... TripID: ${currentTripId}`;
+
             const q = query(collection(db, "items"), where("tripId", "==", currentTripId));
             
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const div = document.getElementById('itinerary-list');
-                // 暫存目前的捲動位置 (優化體驗)
-                const scrollPos = div.scrollTop;
-                
-                div.innerHTML = '';
                 currentDayItemsData = [];
+                let totalCount = 0;
 
                 snapshot.forEach(doc => {
+                    totalCount++;
                     const data = doc.data();
                     if(data.day == currentDayIndex) {
                         currentDayItemsData.push({ id: doc.id, ...data });
                     }
                 });
 
-                // 排序：拖曳順序 > 時間
+                // 診斷報告
+                debugEl.innerText = `診斷: 資料庫總共 ${totalCount} 筆，本頁 (Day ${currentDayIndex}) 有 ${currentDayItemsData.length} 筆`;
+
+                // 排序：有 orderIndex 照順序，沒有則照時間
                 currentDayItemsData.sort((a, b) => {
                     const orderA = (a.orderIndex !== undefined) ? a.orderIndex : 9999;
                     const orderB = (b.orderIndex !== undefined) ? b.orderIndex : 9999;
@@ -433,66 +435,42 @@
 
                 if(currentDayItemsData.length === 0) {
                      div.innerHTML = '<div style="text-align:center; color:#dadce0; margin-top:50px;"><i class="fas fa-map-marked-alt" style="font-size:48px; opacity:0.5;"></i><p>點擊右下角 + 開始規劃</p></div>';
+                     return;
                 }
 
-                // 累積 HTML
+                // 產生 HTML
                 let htmlBuffer = "";
                 currentDayItemsData.forEach(item => {
-                    // 時間字串處理
-                    let timeDisplay = item.time || "未定";
-                    
-                    htmlBuffer += `
-                        <div class="spot-card" data-id="${item.id}">
-                            <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
-                            <div class="info-col">
-                                <div class="spot-header">
-                                    <div class="spot-title">${item.location || "未命名"} <span class="spot-time">${timeDisplay}</span></div>
+                    // 每一張卡片都用 try-catch 包裹，防止單筆壞資料讓全頁空白
+                    try {
+                        let timeDisplay = item.time || "未定";
+                        
+                        htmlBuffer += `
+                            <div class="spot-card">
+                                <div class="info-col">
+                                    <div class="spot-header">
+                                        <div class="spot-title">${item.location || "未命名"} <span class="spot-time">${timeDisplay}</span></div>
+                                    </div>
+                                    <div class="spot-meta">
+                                        ${item.duration ? `<span class="badge"><i class="far fa-clock"></i> ${item.duration}分</span>` : ''}
+                                        ${item.transport && item.transport !== '無' ? `<span class="badge"><i class="fas fa-bus"></i> ${item.transport}</span>` : ''}
+                                        ${item.note ? `<span class="badge" style="background:#fff3e0; color:#e65100;"><i class="far fa-comment-dots"></i> ${item.note}</span>` : ''}
+                                    </div>
                                 </div>
-                                <div class="spot-meta">
-                                    ${item.duration ? `<span class="badge"><i class="far fa-clock"></i> ${item.duration}分</span>` : ''}
-                                    ${item.transport && item.transport !== '無' ? `<span class="badge"><i class="fas fa-bus"></i> ${item.transport}</span>` : ''}
-                                    ${item.note ? `<span class="badge" style="background:#fff3e0; color:#e65100;"><i class="far fa-comment-dots"></i> ${item.note}</span>` : ''}
+                                <div class="card-actions">
+                                    <button class="icon-btn btn-edit" onclick="openModal('${item.id}')"><i class="fas fa-pen"></i></button>
+                                    <button class="icon-btn btn-del" onclick="delItem('${item.id}')"><i class="fas fa-trash-alt"></i></button>
                                 </div>
                             </div>
-                            <div class="card-actions">
-                                <button class="icon-btn btn-edit" onclick="openModal('${item.id}')"><i class="fas fa-pen"></i></button>
-                                <button class="icon-btn btn-del" onclick="delItem('${item.id}')"><i class="fas fa-trash-alt"></i></button>
-                            </div>
-                        </div>
-                    `;
+                        `;
+                    } catch(err) {
+                        console.error("Card render error:", err);
+                        htmlBuffer += `<div style="padding:10px; color:red;">⚠️ 此筆行程資料異常</div>`;
+                    }
                 });
 
                 div.innerHTML = htmlBuffer;
-                div.scrollTop = scrollPos; // 還原捲動位置
-
-                // 安全啟動拖曳 (延遲 500ms 確保 DOM 渲染完畢，防止當機)
-                setTimeout(() => {
-                    if(typeof Sortable !== 'undefined') {
-                        if(sortableInstance) sortableInstance.destroy();
-                        const el = document.getElementById('itinerary-list');
-                        if(el) {
-                            sortableInstance = new Sortable(el, {
-                                handle: '.drag-handle',
-                                animation: 150,
-                                ghostClass: 'sortable-ghost',
-                                onEnd: function (evt) { saveNewOrder(); }
-                            });
-                        }
-                    }
-                }, 500);
             });
-        }
-
-        async function saveNewOrder() {
-            const list = document.getElementById('itinerary-list');
-            const items = list.querySelectorAll('.spot-card');
-            const batch = writeBatch(db);
-            items.forEach((item, index) => {
-                const ref = doc(db, "items", item.dataset.id);
-                batch.update(ref, { orderIndex: index });
-            });
-            await batch.commit();
-            showToast("順序已更新");
         }
 
         window.saveItem = async () => {
