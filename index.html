@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>旅伴 Go! V16.1 (視窗修復版)</title>
+    <title>旅伴 Go! V17.0 (權限分流版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -63,20 +63,21 @@
         .transport-pill { background: white; border: 1px solid #eee; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; color: #666; position: relative; z-index: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.03); display: flex; align-items: center; gap: 6px; }
         .transport-pill i { color: var(--primary); }
 
-        .fab-btn { position: absolute; bottom: 25px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 4px 15px rgba(66,133,244,0.4); font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s; z-index: 100; }
+        /* V17.0: 權限控制 - 隱藏新增按鈕 */
+        .fab-btn { 
+            position: absolute; bottom: 25px; right: 25px; 
+            width: 60px; height: 60px; border-radius: 50%; 
+            background: var(--primary); color: white; border: none; 
+            box-shadow: 0 4px 15px rgba(66,133,244,0.4); font-size: 28px; 
+            display: none; /* 預設隱藏，JS 控制顯示 */
+            align-items: center; justify-content: center; 
+            cursor: pointer; transition: transform 0.2s; z-index: 100; 
+        }
         .fab-btn:active { transform: scale(0.9); }
 
-        /* === 視窗核心 CSS (V16.1 修復版) === */
+        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; transition: opacity 0.3s; }
-        .modal-sheet { 
-            position: fixed; bottom: -100%; left: 0; width: 100%; 
-            background: white; border-radius: 20px 20px 0 0; padding: 25px; 
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; 
-            transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); 
-            max-height: 90vh; overflow-y: auto; 
-        }
-        
-        /* V16.1 關鍵：只有加上 .sheet-active 的視窗才會滑上來 */
+        .modal-sheet { position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 20px 20px 0 0; padding: 25px; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 1000; transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); max-height: 90vh; overflow-y: auto; }
         .modal-sheet.sheet-active { bottom: 0; }
         .modal-active .modal-overlay { display: block; opacity: 1; }
 
@@ -113,18 +114,8 @@
             .app-container { flex-direction: row; }
             .sidebar { display: flex; }
             .mobile-header, .mobile-days-bar { display: none; }
-            /* V16.1 電腦版 CSS 修正 */
-            .modal-sheet { 
-                width: 450px; left: 50%; top: 50%; bottom: auto !important; 
-                transform: translate(-50%, -50%) scale(0.95); 
-                border-radius: 16px; opacity: 0; pointer-events: none; 
-                transition: opacity 0.3s, transform 0.3s; 
-            }
-            /* 只有加上 .sheet-active 才會顯示 */
-            .modal-sheet.sheet-active { 
-                opacity: 1; pointer-events: auto; bottom: auto !important; 
-                transform: translate(-50%, -50%) scale(1); 
-            }
+            .modal-sheet { width: 450px; left: 50%; top: 50%; bottom: auto !important; transform: translate(-50%, -50%) scale(0.95); border-radius: 16px; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; }
+            .modal-active .modal-sheet { opacity: 1; pointer-events: auto; bottom: auto !important; transform: translate(-50%, -50%) scale(1); }
         }
     </style>
 </head>
@@ -192,6 +183,7 @@
 
             <div class="mobile-days-bar" id="mobileDayList"></div>
             <div class="main-content" id="listArea"></div>
+            
             <button id="fabBtn" class="fab-btn" onclick="openItemModal()"><i class="fas fa-plus"></i></button>
         </div>
     </div>
@@ -225,6 +217,11 @@
         
         <div class="form-group" style="background:#fff8e1; padding:10px; border-radius:10px; text-align:center;">
             <strong id="accountTitle" style="color:#5d4037; font-size:1.1em;">項目名稱</strong>
+        </div>
+
+        <div class="form-group">
+            <label>🛒 購買品項</label>
+            <input type="text" id="itemNameInput" placeholder="例如：門票、午餐">
         </div>
 
         <div class="form-group">
@@ -359,7 +356,10 @@
             let badgeClass = isEditor ? "role-badge role-editor" : "role-badge role-viewer";
             mBadge.innerText = badgeText; mBadge.className = badgeClass;
             pcBadge.innerText = badgeText; pcBadge.className = badgeClass;
-            document.getElementById('fabBtn').style.display = "flex";
+            
+            // V17.0: 只有管理員看得到 FAB
+            document.getElementById('fabBtn').style.display = isEditor ? "flex" : "none";
+            
             renderDayNav(tripData.days);
             changeDay(1);
             listenAllCosts(); 
@@ -461,12 +461,15 @@
 
                     let actionButtons = `
                         <div class="actions-col">
-                            <button class="act-btn" onclick="openItemModal('${item.id}')"><i class="fas fa-pen"></i></button>
                             <button class="act-btn money" onclick="openAccountModal('${item.id}')"><i class="fas fa-dollar-sign"></i></button>
                     `;
                     
-                    if(isEditor || item.createdBy === '您') { 
-                         actionButtons += `<button class="act-btn del" onclick="delItem('${item.id}')"><i class="fas fa-trash"></i></button>`;
+                    // V17.0: 只有編輯者能看到編輯和刪除
+                    if(isEditor) { 
+                         actionButtons += `
+                            <button class="act-btn" onclick="openItemModal('${item.id}')"><i class="fas fa-pen"></i></button>
+                            <button class="act-btn del" onclick="delItem('${item.id}')"><i class="fas fa-trash"></i></button>
+                         `;
                     }
                     actionButtons += `</div>`;
 
@@ -483,7 +486,6 @@
         window.closeAllModals = () => {
             document.body.classList.remove('modal-active');
             document.getElementById('modalOverlay').style.display = 'none';
-            // V16.1 修正：移除所有 sheet-active class
             document.querySelectorAll('.modal-sheet').forEach(el => el.classList.remove('sheet-active'));
         }
 
@@ -494,21 +496,16 @@
         }
 
         window.openItemModal = (id = null) => {
+            // V17.0: 一般人無法開啟編輯
+            if(!isEditor && id) return;
+
             document.body.classList.add('modal-active');
             document.getElementById('modalOverlay').style.display = 'block';
             document.getElementById('itemModalSheet').classList.add('sheet-active');
 
             document.getElementById('editId').value = id || "";
             const routeBtn = document.getElementById('routeBtn');
-            const btnSave = document.getElementById('btnSave');
             window.updateMapPreview('');
-
-            if(id && !isEditor) {
-                const item = currentData.find(x => x.id === id);
-                if(item) btnSave.style.display = 'none'; 
-            } else {
-                btnSave.style.display = 'block';
-            }
 
             if(id) {
                 const item = currentData.find(x => x.id === id);
@@ -541,6 +538,9 @@
             document.getElementById('accountId').value = id;
             document.getElementById('accountTitle').innerText = item.location;
             
+            // V17.0: 填入品項名稱
+            document.getElementById('itemNameInput').value = item.itemName || "";
+
             const creatorSel = document.getElementById('creatorSelect');
             creatorSel.innerHTML = '<option value="">請選擇...</option>';
             if(tripData.groups) {
@@ -597,6 +597,8 @@
         window.saveAccount = async () => {
             const id = document.getElementById('accountId').value;
             const createdBy = document.getElementById('creatorSelect').value;
+            const itemName = document.getElementById('itemNameInput').value; // V17.0
+            
             if(!createdBy) return alert("請選擇是誰記帳的");
 
             const unitPrice = parseFloat(document.getElementById('unitPriceInput').value) || 0;
@@ -611,7 +613,7 @@
 
             try {
                 await updateDoc(doc(db, "items", id), {
-                    unitPrice, splitData, totalCost, createdBy
+                    unitPrice, splitData, totalCost, createdBy, itemName
                 });
                 closeAllModals();
             } catch(e) { alert("儲存失敗"); }
@@ -621,6 +623,9 @@
         window.openGoogleMapsRoute = () => { const current = document.getElementById('locInput').value; let url = `https://www.google.com/maps?q=${encodeURIComponent(window.lastLoc)}`; if(current) url += `&destination=${encodeURIComponent(current)}`; window.open(url, '_blank'); }
 
         window.saveItem = async () => {
+            // V17.0: 嚴格禁止一般人存檔行程
+            if(!isEditor) return alert("權限不足");
+
             const id = document.getElementById('editId').value;
             const data = {
                 tripId: currentTripId, day: parseInt(currentDay),
