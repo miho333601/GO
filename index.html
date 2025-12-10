@@ -3,114 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旅伴 Go! V9.0 (視覺流暢版)</title>
+    <title>旅伴 Go! V9.1 (交通時間版)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* === 基礎樣式 === */
         body { font-family: 'Noto Sans TC', sans-serif; background: #f0f2f5; margin: 0; display: flex; height: 100vh; color: #333; }
-        
-        /* 側邊欄 */
         .sidebar { width: 260px; background: white; display: flex; flex-direction: column; border-right: 1px solid #ddd; box-shadow: 2px 0 5px rgba(0,0,0,0.05); }
         .sidebar-header { padding: 20px; background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); color: white; }
         .day-list { list-style: none; padding: 10px; margin: 0; flex: 1; overflow-y: auto; }
-        .day-btn { 
-            width: 100%; padding: 12px 20px; border: none; background: white; 
-            text-align: left; cursor: pointer; font-size: 16px; color: #5f6368;
-            border-radius: 0 20px 20px 0; margin-bottom: 5px; transition: 0.2s;
-        }
+        .day-btn { width: 100%; padding: 12px 20px; border: none; background: white; text-align: left; cursor: pointer; font-size: 16px; color: #5f6368; border-radius: 0 20px 20px 0; margin-bottom: 5px; transition: 0.2s; }
         .day-btn:hover { background: #f1f3f4; }
         .day-btn.active { background: #e8f0fe; color: #1967d2; font-weight: bold; }
-
-        /* 主內容區 */
         .main { flex: 1; display: flex; flex-direction: column; position: relative; background: #fff; }
         .top-bar { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; z-index: 10; }
         
-        /* 列表區 */
-        #listArea { 
-            flex: 1; padding: 20px; overflow-y: auto; background-color: #f8f9fa; 
-            padding-bottom: 100px;
-        }
+        #listArea { flex: 1; padding: 20px; overflow-y: auto; background-color: #f8f9fa; padding-bottom: 100px; }
 
-        /* === V9.0 新版卡片樣式 === */
-        .timeline-container {
-            display: flex; flex-direction: column; align-items: stretch;
-        }
-
+        /* === 卡片樣式 === */
         .spot-card {
-            background: white; padding: 0; margin: 0; /* 移除 margin，改由連接器控制間距 */
+            background: white; padding: 0; margin: 0; 
             border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             display: flex; overflow: hidden; border: 1px solid #eee;
             transition: transform 0.2s; position: relative; z-index: 2;
         }
         .spot-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
 
-        .time-col {
-            width: 70px; background: #e8f0fe; color: #1967d2;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-right: 1px solid #d2e3fc; padding: 10px; font-weight: bold;
-        }
-        
+        .time-col { width: 75px; background: #e8f0fe; color: #1967d2; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid #d2e3fc; padding: 10px; font-weight: bold; font-size: 0.9em; text-align: center;}
         .info-col { flex: 1; padding: 15px; display: flex; flex-direction: column; justify-content: center; }
         .spot-title { font-size: 1.2em; font-weight: bold; color: #202124; margin-bottom: 8px; }
-        
         .spot-details { font-size: 0.9em; color: #5f6368; display: flex; flex-direction: column; gap: 4px; }
         .detail-row { display: flex; align-items: center; gap: 6px; }
         .note-tag { background: #fff8e1; color: #f57f17; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; display: inline-block;}
-
         .actions-col { display: flex; flex-direction: column; border-left: 1px solid #eee; width: 40px; }
         .act-btn { flex: 1; border: none; background: white; cursor: pointer; color: #9aa0a6; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
         .act-btn:hover { background: #f8f9fa; color: #333; }
         .act-btn.del:hover { background: #fce8e6; color: #d93025; }
 
-        /* === V9.0 交通連接器樣式 === */
+        /* === 交通連接器 (V9.1 更新：顯示時間) === */
         .transport-connector {
             display: flex; align-items: center; justify-content: center;
-            padding: 10px 0; position: relative; color: #666; font-size: 0.85em;
+            padding: 15px 0; position: relative; color: #666; font-size: 0.85em;
         }
-        /* 虛線 */
         .transport-connector::before {
-            content: ''; position: absolute; top: 0; bottom: 0; left: 35px; /* 對齊左側 */
-            width: 2px; background: repeating-linear-gradient(to bottom, #ccc 0, #ccc 4px, transparent 4px, transparent 8px);
+            content: ''; position: absolute; top: 0; bottom: 0; left: 37px; /* 對齊線條 */
+            width: 2px; background: repeating-linear-gradient(to bottom, #ccc 0, #ccc 6px, transparent 6px, transparent 12px);
             z-index: 0;
         }
-        /* 交通標籤 */
         .transport-badge {
-            background: #f1f3f4; padding: 4px 12px; border-radius: 20px;
-            z-index: 1; border: 1px solid #e0e0e0;
-            display: flex; align-items: center; gap: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            background: #fff; padding: 6px 16px; border-radius: 20px;
+            z-index: 1; border: 1px solid #dadce0;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #1a73e8; font-weight: 500;
         }
-        .transport-badge i { color: #1a73e8; }
+        .transport-badge span { color: #5f6368; font-weight: normal; font-size: 0.9em; margin-left: 5px; border-left: 1px solid #eee; padding-left: 8px;}
 
-        /* 除錯區 */
+        /* 其他元件 */
         .debug-box { font-size: 12px; color: #aaa; padding: 10px; text-align: center; border-top: 1px solid #eee; }
-
-        /* 按鈕與彈窗 */
-        .fab-btn { 
-            position: absolute; bottom: 30px; right: 30px; 
-            width: 60px; height: 60px; border-radius: 50%; 
-            background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); 
-            color: white; border: none; font-size: 28px; 
-            cursor: pointer; box-shadow: 0 4px 15px rgba(66,133,244,0.4); 
-            display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s; z-index: 100;
-        }
+        .fab-btn { position: absolute; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #4285F4 0%, #34A853 100%); color: white; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 4px 15px rgba(66,133,244,0.4); display: flex; align-items: center; justify-content: center; transition: transform 0.2s; z-index: 100; }
         .fab-btn:active { transform: scale(0.95); }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 25px; border-radius: 16px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         
         input, select { width: 100%; padding: 12px; margin: 6px 0 15px 0; border: 1px solid #dadce0; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         label { font-weight: bold; font-size: 0.9em; color: #5f6368; }
-        
         #mapPreview { width: 100%; height: 150px; background: #eee; border-radius: 8px; margin-bottom: 15px; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #999; }
-
         .btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
         .btn-primary { background: #1a73e8; color: white; }
         .btn-cancel { background: #f1f3f4; color: #333; }
-        
         .big-btn { width: 100%; padding: 12px; border:none; background:#34A853; color:white; border-radius:6px; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;}
     </style>
 </head>
@@ -143,8 +104,9 @@
 
             <div id="route-box" style="display:none;">
                 <button class="big-btn" onclick="openGoogleMapsRoute()">
-                    <i class="fas fa-directions"></i> 規劃路線 (從上一站)
+                    <i class="fas fa-directions"></i> 查詢路線 (Google Maps)
                 </button>
+                <small style="color:#666; display:block; margin-bottom:15px; text-align:center;">💡 點擊上方按鈕查看時間，再填入下方欄位</small>
             </div>
 
             <label>地點名稱</label>
@@ -163,15 +125,22 @@
                 </div>
             </div>
 
-            <label>交通方式 (如何抵達這裡?)</label>
-            <select id="transportInput">
-                <option value="無">請選擇...</option>
-                <option value="開車">🚗 開車</option>
-                <option value="大眾運輸">🚆 大眾運輸</option>
-                <option value="步行">🚶 步行</option>
-                <option value="單車">🚲 單車</option>
-                <option value="其他">🛸 其他</option>
-            </select>
+            <label>前來此處的交通方式</label>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <select id="transportInput">
+                        <option value="無">請選擇...</option>
+                        <option value="開車">🚗 開車</option>
+                        <option value="大眾運輸">🚆 大眾運輸</option>
+                        <option value="步行">🚶 步行</option>
+                        <option value="單車">🚲 單車</option>
+                        <option value="其他">🛸 其他</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <input type="number" id="travelTimeInput" placeholder="車程(分)">
+                </div>
+            </div>
 
             <label>備註</label>
             <input type="text" id="noteInput" placeholder="票價、必吃...">
@@ -215,7 +184,6 @@
         let unsubscribe = null;
         let currentData = [];
 
-        // 初始化
         if(currentTripId) {
             document.getElementById('codeEnter').value = currentTripId;
             getDoc(doc(db, "trips", currentTripId)).then(snap => {
@@ -235,7 +203,7 @@
         }
 
         window.createNew = async () => {
-            const name = prompt("旅程名稱 (如：日本行)");
+            const name = prompt("旅程名稱");
             const days = prompt("天數", "5");
             if(name && days) {
                 const id = Math.floor(100000 + Math.random()*900000).toString();
@@ -250,7 +218,6 @@
             document.getElementById('landing').style.display = 'none';
             document.getElementById('tripTitle').innerText = data.name;
             document.getElementById('tripCode').innerText = "代碼: " + currentTripId;
-            
             const div = document.getElementById('dayList');
             div.innerHTML = "";
             for(let i=1; i<=data.days; i++) {
@@ -267,12 +234,11 @@
             listenData();
         }
 
-        // 時間格式化小工具
         function formatDuration(minutes) {
             if(!minutes) return "";
             const h = Math.floor(minutes / 60);
             const m = minutes % 60;
-            if(h > 0 && m > 0) return `${h}小時${m}分鐘`;
+            if(h > 0 && m > 0) return `${h}小時${m}分`;
             if(h > 0) return `${h}小時`;
             return `${m}分鐘`;
         }
@@ -297,7 +263,7 @@
                 if(currentData.length === 0) listDiv.innerHTML = "<div style='text-align:center;color:#ccc;margin-top:50px;'>📭 尚無行程，點 + 新增</div>";
 
                 currentData.forEach((item, index) => {
-                    // 1. 如果不是第一筆，且有交通方式，插入「交通連接器」
+                    // === V9.1 交通連接器 ===
                     if (index > 0 && item.transport && item.transport !== '無') {
                         let icon = 'fas fa-arrow-down';
                         if(item.transport.includes('開車')) icon = 'fas fa-car';
@@ -305,23 +271,30 @@
                         else if(item.transport.includes('步')) icon = 'fas fa-walking';
                         else if(item.transport.includes('單車')) icon = 'fas fa-bicycle';
                         
+                        // 處理交通時間 (新功能)
+                        let travelTimeHtml = "";
+                        if (item.travelDuration) {
+                            travelTimeHtml = `<span>⏱️ ${formatDuration(item.travelDuration)}</span>`;
+                        }
+
                         listDiv.innerHTML += `
                             <div class="transport-connector">
                                 <div class="transport-badge">
                                     <i class="${icon}"></i> ${item.transport}
+                                    ${travelTimeHtml}
                                 </div>
                             </div>
                         `;
                     }
 
-                    // 2. 格式化停留時間
-                    const durationText = formatDuration(item.duration);
+                    // 停留時間
+                    const stayText = formatDuration(item.duration);
                     
-                    // 3. 渲染卡片
+                    // 渲染卡片
                     const timeDisplay = item.time || "--:--";
                     const locDisplay = item.location || "未命名";
                     const noteHtml = item.note ? `<div class="detail-row"><span class="note-tag"><i class="far fa-sticky-note"></i> ${item.note}</span></div>` : '';
-                    const durationHtml = durationText ? `<div class="detail-row"><i class="far fa-clock" style="color:#aaa;"></i> 預計停留 ${durationText}</div>` : '';
+                    const durationHtml = stayText ? `<div class="detail-row"><i class="far fa-clock" style="color:#aaa;"></i> 預計停留 ${stayText}</div>` : '';
 
                     listDiv.innerHTML += `
                         <div class="spot-card">
@@ -345,7 +318,6 @@
             });
         }
 
-        // Google Maps & Modal
         window.updateMap = (loc) => {
             const div = document.getElementById('mapPreview');
             if(!loc) div.innerHTML = "地圖預覽區";
@@ -362,15 +334,19 @@
                 document.getElementById('locInput').value = item.location;
                 document.getElementById('timeInput').value = item.time;
                 document.getElementById('durationInput').value = item.duration || "";
+                
+                // V9.1 新欄位
                 document.getElementById('transportInput').value = item.transport || "無";
+                document.getElementById('travelTimeInput').value = item.travelDuration || "";
+                
                 document.getElementById('noteInput').value = item.note || "";
                 document.getElementById('route-box').style.display = 'none';
                 updateMap(item.location);
             } else {
-                ['locInput','timeInput','durationInput','noteInput'].forEach(i => document.getElementById(i).value = '');
+                ['locInput','timeInput','durationInput','noteInput','travelTimeInput'].forEach(i => document.getElementById(i).value = '');
                 document.getElementById('transportInput').value = "無";
                 
-                // 上一站按鈕邏輯
+                // 智慧路線
                 const routeBox = document.getElementById('route-box');
                 if(currentData.length > 0) {
                     routeBox.style.display = 'block';
@@ -399,6 +375,7 @@
                 time: document.getElementById('timeInput').value,
                 duration: document.getElementById('durationInput').value,
                 transport: document.getElementById('transportInput').value,
+                travelDuration: document.getElementById('travelTimeInput').value, // 新增：交通時間
                 note: document.getElementById('noteInput').value
             };
             if(!data.location) return alert("地點必填");
