@@ -1,30 +1,38 @@
 name: Update Schedule Image
 
+# 設定執行的觸發條件
 on:
   schedule:
+    # 每天台灣時間早上 8 點執行 (UTC 00:00)
     - cron: '0 0 * * *'
-  workflow_dispatch: 
+  workflow_dispatch: # 允許您在 Actions 頁面手動點擊按鈕執行測試
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      # 1. 下載您的程式碼
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. 設定 Python 環境
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
+      # 3. 安裝必要的套件與瀏覽器驅動
       - name: Install dependencies
         run: |
           pip install playwright PyGithub
+          # 安裝 Playwright 執行所需的 Linux 系統依賴
           playwright install-deps chromium
           playwright install chromium
 
+      # 4. 執行您的 Python 腳本
       - name: Run capture script
         env:
-          # 這裡將 Secret 傳遞給 Python 腳本
+          # 重要：這行是將 GitHub Secrets 裡的密碼傳給 Python
+          # 您的 Secret 名稱必須叫 MY_GITHUB_TOKEN
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: python auto_update.py
