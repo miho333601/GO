@@ -2,7 +2,7 @@ name: Update Schedule Image
 
 on:
   schedule:
-    - cron: '0 0 * * *' # 台灣時間早上 8 點
+    - cron: '0 0 * * *'
   workflow_dispatch: 
 
 jobs:
@@ -20,11 +20,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install playwright PyGithub
-          # 安裝 Playwright 必備的 Linux 系統套件
           playwright install-deps chromium
           playwright install chromium
 
       - name: Run capture script
         env:
+          # 這裡將 Secret 傳遞給 Python 腳本
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: python auto_update.py
